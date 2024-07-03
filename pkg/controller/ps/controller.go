@@ -534,7 +534,6 @@ func (r *PerconaServerMySQLReconciler) reconcileMySQLAutoConfig(ctx context.Cont
 		if k8serrors.IsNotFound(err) {
 			exists = false
 		}
-
 		if !exists || !metav1.IsControlledBy(currentConfigMap, cr) {
 			return nil
 		}

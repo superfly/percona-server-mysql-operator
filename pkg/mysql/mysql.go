@@ -547,7 +547,7 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 		SecurityContext:          spec.ContainerSecurityContext,
 		LivenessProbe:            k8s.HTTPCheckProbe(spec.LivenessProbe, "/liveness", 8080),
-		ReadinessProbe:           k8s.HTTPCheckProbe(spec.ReadinessProbe, "readiness", 8080),
+		ReadinessProbe:           k8s.HTTPCheckProbe(spec.ReadinessProbe, "/readiness", 8080),
 		StartupProbe:             k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 8091),
 		// Disabled since we only use async replication. This only applies to group replication.
 		// Lifecycle: &corev1.Lifecycle{
