@@ -5,6 +5,12 @@ metadata:
   finalizers:
     - percona.com/delete-mysql-pods-in-order
 spec:
+  unsafeFlags:
+    mysqlSize: true
+    orchestrator: false
+    orchestratorSize: false
+    proxy: false
+    proxySize: false
   crVersion: 0.8.0
   secretsName: cluster1-secrets
   sslSecretName: cluster1-ssl
@@ -15,7 +21,7 @@ spec:
   mysql:
     clusterType: async
     autoRecovery: true
-    image: flyio/percona-server-mysql-operator:fks-8
+    image: flyio/percona-server-mysql-operator:fks-9
     imagePullPolicy: Always
     size: 1
     resources:
@@ -31,18 +37,18 @@ spec:
           requests:
             storage: 2G
   toolkit:
-    image: flyio/percona-server-mysql-operator:fks-8
+    image: flyio/percona-server-mysql-operator:fks-9
     imagePullPolicy: Always
 
   backup:
     enabled: false
-    image: flyio/percona-server-mysql-operator:fks-8
+    image: flyio/percona-server-mysql-operator:fks-9
 
   proxy:
     haproxy:
       enabled: false
       size: 3
-      image: flyio/percona-server-mysql-operator:fks-8
+      image: flyio/percona-server-mysql-operator:fks-9
       imagePullPolicy: Always
       resources:
         requests:
@@ -50,12 +56,12 @@ spec:
           cpu: 600m
     router:
       enabled: false
-      image: flyio/percona-server-mysql-operator:fks-8
+      image: flyio/percona-server-mysql-operator:fks-9
       imagePullPolicy: Always
 
   orchestrator:
     enabled: true
-    image: flyio/percona-server-mysql-operator:fks-8
+    image: flyio/percona-server-mysql-operator:fks-9
     imagePullPolicy: Always
     size: 3
     affinity:
