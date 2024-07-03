@@ -3,6 +3,8 @@
 set -e
 set -o xtrace
 
+/opt/percona-server-mysql-operator/ps-init-entrypoint.sh
+
 OPERATOR_BINDIR=/opt/percona
 ORC_CONF_PATH=${ORC_CONF_PATH:-/etc/orchestrator}
 ORC_CONF_FILE=${ORC_CONF_FILE:-"${ORC_CONF_PATH}/orchestrator.conf.json"}
@@ -50,5 +52,8 @@ sed -r "s|^[#]?password=.*$|password=${TOPOLOGY_PASSWORD:-$ORC_TOPOLOGY_PASSWORD
 cat "${temp}" >"${ORC_CONF_PATH}/orc-topology.cnf"
 rm "${temp}"
 set -o xtrace
+
+# Check for new mysql nodes in the background here instead of in a sidecar
+/opt/percona/peer-list -on-change=/usr/bin/add_mysql_nodes.sh -service=$(MYSQL_SERVICE) &
 
 exec "$@"

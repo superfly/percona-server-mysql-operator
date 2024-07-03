@@ -11,7 +11,6 @@ import (
 	apiv1alpha1 "github.com/percona/percona-server-mysql-operator/api/v1alpha1"
 	"github.com/percona/percona-server-mysql-operator/pkg/k8s"
 	"github.com/percona/percona-server-mysql-operator/pkg/naming"
-	"github.com/percona/percona-server-mysql-operator/pkg/pmm"
 	"github.com/percona/percona-server-mysql-operator/pkg/util"
 )
 
@@ -157,14 +156,14 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, configHash, tlsH
 					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
-					InitContainers: []corev1.Container{
-						k8s.InitContainer(
-							ComponentName,
-							initImage,
-							spec.ImagePullPolicy,
-							spec.ContainerSecurityContext,
-						),
-					},
+					// InitContainers: []corev1.Container{
+					// 	k8s.InitContainer(
+					// 		ComponentName,
+					// 		initImage,
+					// 		spec.ImagePullPolicy,
+					// 		spec.ContainerSecurityContext,
+					// 	),
+					// },
 					Containers:                    containers(cr, secret),
 					ServiceAccountName:            cr.Spec.MySQL.ServiceAccountName,
 					NodeSelector:                  cr.Spec.MySQL.NodeSelector,
@@ -463,15 +462,15 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret) []cor
 	containers := []corev1.Container{mysqldContainer(cr)}
 
 	if backup := cr.Spec.Backup; backup != nil && backup.Enabled {
-		containers = append(containers, backupContainer(cr))
+		// containers = append(containers, backupContainer(cr))
 	}
 
 	if toolkit := cr.Spec.Toolkit; toolkit != nil && cr.Spec.MySQL.IsAsync() && cr.OrchestratorEnabled() {
-		containers = append(containers, heartbeatContainer(cr))
+		//containers = append(containers, heartbeatContainer(cr))
 	}
 
 	if cr.PMMEnabled(secret) {
-		containers = append(containers, pmm.Container(cr, secret, ComponentName))
+		// containers = append(containers, pmm.Container(cr, secret, ComponentName))
 	}
 
 	return appendUniqueContainers(containers, cr.Spec.MySQL.Sidecars...)
@@ -542,21 +541,22 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 				MountPath: configMountPath,
 			},
 		},
-		Command:                  []string{"/opt/percona/ps-entrypoint.sh"},
+		Command:                  []string{"/opt/percona-server-mysql-operator/ps-entrypoint.sh"},
 		Args:                     []string{"mysqld"},
 		TerminationMessagePath:   "/dev/termination-log",
 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 		SecurityContext:          spec.ContainerSecurityContext,
-		LivenessProbe:            k8s.ExecProbe(spec.LivenessProbe, []string{"/opt/percona/healthcheck", "liveness"}),
-		ReadinessProbe:           k8s.ExecProbe(spec.ReadinessProbe, []string{"/opt/percona/healthcheck", "readiness"}),
-		StartupProbe:             k8s.ExecProbe(spec.StartupProbe, []string{"/opt/percona/bootstrap"}),
-		Lifecycle: &corev1.Lifecycle{
-			PreStop: &corev1.LifecycleHandler{
-				Exec: &corev1.ExecAction{
-					Command: []string{"/opt/percona/ps-pre-stop.sh"},
-				},
-			},
-		},
+		LivenessProbe:            k8s.HTTPCheckProbe(spec.LivenessProbe, "/liveness", 8080),
+		ReadinessProbe:           k8s.HTTPCheckProbe(spec.ReadinessProbe, "readiness", 8080),
+		StartupProbe:             k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 8091),
+		// Disabled since we only use async replication. This only applies to group replication.
+		// Lifecycle: &corev1.Lifecycle{
+		// 	PreStop: &corev1.LifecycleHandler{
+		// 		Exec: &corev1.ExecAction{
+		// 			Command: []string{"/opt/percona/ps-pre-stop.sh"},
+		// 		},
+		// 	},
+		// },
 	}
 
 	return container

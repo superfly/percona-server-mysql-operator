@@ -6,6 +6,8 @@ ROUTER_DIR=${ROUTER_DIR:-/tmp/router}
 OPERATOR_USER=${OPERATOR_USER:-operator}
 NAMESPACE=$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)
 
+/opt/percona-server-mysql-operator/ps-init-entrypoint.sh
+
 if [ -f "/etc/mysql/mysql-users-secret/${OPERATOR_USER}" ]; then
 	OPERATOR_PASS=$(<"/etc/mysql/mysql-users-secret/${OPERATOR_USER}")
 fi

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,55 +21,75 @@ import (
 )
 
 func main() {
-	fullClusterCrash, err := fileExists("/var/lib/mysql/full-cluster-crash")
-	if err != nil {
-		log.Fatalf("check /var/lib/mysql/full-cluster-crash: %s", err)
-	}
-	if fullClusterCrash {
-		os.Exit(0)
-	}
+	http.HandleFunc("/readiness", readinessHandler)
+	http.HandleFunc("/liveness", livenessHandler)
+	http.HandleFunc("/replication", replicationHandler)
 
-	manualRecovery, err := fileExists("/var/lib/mysql/sleep-forever")
-	if err != nil {
-		log.Fatalf("check /var/lib/mysql/sleep-forever: %s", err)
+	log.Println("Starting HTTP server on port 8090")
+	if err := http.ListenAndServe(":8090", nil); err != nil {
+		log.Fatalf("Failed to start HTTP server: %v", err)
 	}
-	if manualRecovery {
-		os.Exit(0)
-	}
+}
 
+func readinessHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	switch os.Args[1] {
-	case "readiness":
-		switch os.Getenv("CLUSTER_TYPE") {
-		case "async":
-			if err := checkReadinessAsync(ctx); err != nil {
-				log.Fatalf("readiness check failed: %v", err)
-			}
-		case "group-replication":
-			if err := checkReadinessGR(ctx); err != nil {
-				log.Fatalf("readiness check failed: %v", err)
-			}
+	switch os.Getenv("CLUSTER_TYPE") {
+	case "async":
+		if err := checkReadinessAsync(ctx); err != nil {
+			http.Error(w, fmt.Sprintf("readiness check failed: %v", err), http.StatusInternalServerError)
+			return
 		}
-	case "liveness":
-		switch os.Getenv("CLUSTER_TYPE") {
-		case "async":
-			if err := checkLivenessAsync(ctx); err != nil {
-				log.Fatalf("liveness check failed: %v", err)
-			}
-		case "group-replication":
-			if err := checkLivenessGR(ctx); err != nil {
-				log.Fatalf("liveness check failed: %v", err)
-			}
-		}
-	case "replication":
-		if err := checkReplication(ctx); err != nil {
-			log.Fatalf("replication check failed: %v", err)
+	case "group-replication":
+		if err := checkReadinessGR(ctx); err != nil {
+			http.Error(w, fmt.Sprintf("readiness check failed: %v", err), http.StatusInternalServerError)
+			return
 		}
 	default:
-		log.Fatalf("Usage: %s liveness|readiness|replication", os.Args[0])
+		http.Error(w, "Invalid or missing CLUSTER_TYPE environment variable", http.StatusInternalServerError)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Readiness check passed"))
+}
+
+func livenessHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	switch os.Getenv("CLUSTER_TYPE") {
+	case "async":
+		if err := checkLivenessAsync(ctx); err != nil {
+			http.Error(w, fmt.Sprintf("liveness check failed: %v", err), http.StatusInternalServerError)
+			return
+		}
+	case "group-replication":
+		if err := checkLivenessGR(ctx); err != nil {
+			http.Error(w, fmt.Sprintf("liveness check failed: %v", err), http.StatusInternalServerError)
+			return
+		}
+	default:
+		http.Error(w, "Invalid or missing CLUSTER_TYPE environment variable", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Liveness check passed"))
+}
+
+func replicationHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := checkReplication(ctx); err != nil {
+		http.Error(w, fmt.Sprintf("replication check failed: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Replication check passed"))
 }
 
 func checkReadinessAsync(ctx context.Context) error {

@@ -6,13 +6,13 @@ metadata:
     - percona.com/delete-mysql-pods-in-order
     # - percona.com/delete-ssl
 spec:
-#  unsafeFlags:
-#    mysqlSize: false
-#    orchestrator: false
-#    orchestratorSize: false
-#    proxy: false
-#    proxySize: false
-#  pause: false
+  #  unsafeFlags:
+  #    mysqlSize: false
+  #    orchestrator: false
+  #    orchestratorSize: false
+  #    proxy: false
+  #    proxySize: false
+  #  pause: false
   crVersion: 0.8.0
   secretsName: cluster1-secrets
   sslSecretName: cluster1-ssl
@@ -20,29 +20,29 @@ spec:
   upgradeOptions:
     versionServiceEndpoint: https://check.percona.com
     apply: disabled
-#  initImage: percona/percona-server-mysql-operator:0.8.0
-#  ignoreAnnotations:
-#    - service.beta.kubernetes.io/aws-load-balancer-backend-protocol
-#  ignoreLabels:
-#    - rack
-#  tls:
-#    SANs:
-#      - mysql-1.example.com
-#      - mysql-2.example.com
-#      - mysql-3.example.com
-#    issuerConf:
-#      name: special-selfsigned-issuer
-#      kind: ClusterIssuer
-#      group: cert-manager.io
+  #  initImage: percona/percona-server-mysql-operator:0.8.0
+  #  ignoreAnnotations:
+  #    - service.beta.kubernetes.io/aws-load-balancer-backend-protocol
+  #  ignoreLabels:
+  #    - rack
+  #  tls:
+  #    SANs:
+  #      - mysql-1.example.com
+  #      - mysql-2.example.com
+  #      - mysql-3.example.com
+  #    issuerConf:
+  #      name: special-selfsigned-issuer
+  #      kind: ClusterIssuer
+  #      group: cert-manager.io
 
   mysql:
-    clusterType: group-replication
+    clusterType: async
     autoRecovery: true
-    image: perconalab/percona-server-mysql-operator:main-psmysql
+    image: flyio/percona-server-mysql-operator:fks-3
     imagePullPolicy: Always
-#    initImage: percona/percona-server-mysql-operator:0.8.0
+    #    initImage: percona/percona-server-mysql-operator:0.8.0
 
-    size: 3
+    size: 1
 
     resources:
       requests:
@@ -50,52 +50,52 @@ spec:
       limits:
         memory: 2G
 
-#    readinessProbe:
-#      initialDelaySeconds: 30
-#      timeoutSeconds: 10
-#      periodSeconds: 10
-#      failureThreshold: 3
-#      successThreshold: 1
-#
-#    livenessProbe:
-#      initialDelaySeconds: 15
-#      timeoutSeconds: 10
-#      periodSeconds: 10
-#      failureThreshold: 3
-#      successThreshold: 1
+    #    readinessProbe:
+    #      initialDelaySeconds: 30
+    #      timeoutSeconds: 10
+    #      periodSeconds: 10
+    #      failureThreshold: 3
+    #      successThreshold: 1
+    #
+    #    livenessProbe:
+    #      initialDelaySeconds: 15
+    #      timeoutSeconds: 10
+    #      periodSeconds: 10
+    #      failureThreshold: 3
+    #      successThreshold: 1
 
     affinity:
       antiAffinityTopologyKey: "kubernetes.io/hostname"
-#      advanced:
-#        nodeAffinity:
-#          requiredDuringSchedulingIgnoredDuringExecution:
-#            nodeSelectorTerms:
-#            - matchExpressions:
-#              - key: kubernetes.io/e2e-az-name
-#                operator: In
-#                values:
-#                - e2e-az1
-#                - e2e-az2
-#    topologySpreadConstraints:
-#    - labelSelector:
-#        matchLabels:
-#          app.kubernetes.io/name: percona-server
-#      maxSkew: 1
-#      topologyKey: kubernetes.io/hostname
-#      whenUnsatisfiable: DoNotSchedule
+    #      advanced:
+    #        nodeAffinity:
+    #          requiredDuringSchedulingIgnoredDuringExecution:
+    #            nodeSelectorTerms:
+    #            - matchExpressions:
+    #              - key: kubernetes.io/e2e-az-name
+    #                operator: In
+    #                values:
+    #                - e2e-az1
+    #                - e2e-az2
+    #    topologySpreadConstraints:
+    #    - labelSelector:
+    #        matchLabels:
+    #          app.kubernetes.io/name: percona-server
+    #      maxSkew: 1
+    #      topologyKey: kubernetes.io/hostname
+    #      whenUnsatisfiable: DoNotSchedule
 
-#    expose:
-#      enabled: false
-#      type: ClusterIP
-#      annotations:
-#        service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-#        service.beta.kubernetes.io/aws-load-balancer-type: nlb
-#      externalTrafficPolicy: Cluster
-#      internalTrafficPolicy: Cluster
-#      labels:
-#        rack: rack-22
-#      loadBalancerSourceRanges:
-#        - 10.0.0.0/8
+    #    expose:
+    #      enabled: false
+    #      type: ClusterIP
+    #      annotations:
+    #        service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    #        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    #      externalTrafficPolicy: Cluster
+    #      internalTrafficPolicy: Cluster
+    #      labels:
+    #        rack: rack-22
+    #      loadBalancerSourceRanges:
+    #        - 10.0.0.0/8
 
     volumeSpec:
       persistentVolumeClaim:
@@ -103,45 +103,45 @@ spec:
           requests:
             storage: 2G
 
-#    configuration: |
-#      max_connections=250
-#      innodb_buffer_pool_size={{containerMemoryLimit * 3/4}}
+  #    configuration: |
+  #      max_connections=250
+  #      innodb_buffer_pool_size={{containerMemoryLimit * 3/4}}
 
-#    sidecars:
-#    - name: noop-memory
-#      image: busybox
-#      command: ["sleep", "30d"]
-#      volumeMounts:
-#      - name: "memory-vol"
-#        mountPath: "/var/log/app/memory"
-#      resources:
-#        requests:
-#          memory: 16M
-#    - name: noop-pvc
-#      image: busybox
-#      command: ["sleep", "30d"]
-#      volumeMounts:
-#      - name: "pvc-vol"
-#        mountPath: "/var/log/app/pvc"
-#    sidecarVolumes:
-#    - name: "memory-vol"
-#      emptyDir:
-#        medium: "Memory"
-#    sidecarPVCs:
-#    - name: pvc-vol
-#      spec:
-#        resources:
-#          requests:
-#            storage: 1G
-#    containerSecurityContext:
-#      privileged: true
-#    podSecurityContext:
-#      fsGroup: 1001
-#      supplementalGroups: [1001, 1002, 1003]
+  #    sidecars:
+  #    - name: noop-memory
+  #      image: busybox
+  #      command: ["sleep", "30d"]
+  #      volumeMounts:
+  #      - name: "memory-vol"
+  #        mountPath: "/var/log/app/memory"
+  #      resources:
+  #        requests:
+  #          memory: 16M
+  #    - name: noop-pvc
+  #      image: busybox
+  #      command: ["sleep", "30d"]
+  #      volumeMounts:
+  #      - name: "pvc-vol"
+  #        mountPath: "/var/log/app/pvc"
+  #    sidecarVolumes:
+  #    - name: "memory-vol"
+  #      emptyDir:
+  #        medium: "Memory"
+  #    sidecarPVCs:
+  #    - name: pvc-vol
+  #      spec:
+  #        resources:
+  #          requests:
+  #            storage: 1G
+  #    containerSecurityContext:
+  #      privileged: true
+  #    podSecurityContext:
+  #      fsGroup: 1001
+  #      supplementalGroups: [1001, 1002, 1003]
 
   proxy:
     haproxy:
-      enabled: true
+      enabled: false
 
       size: 3
 
@@ -152,110 +152,110 @@ spec:
         requests:
           memory: 1G
           cpu: 600m
-#        limits:
-#          memory: 1G
-#          cpu: 700m
+      #        limits:
+      #          memory: 1G
+      #          cpu: 700m
 
-#      env:
-#      - name: HA_CONNECTION_TIMEOUT
-#        value: "1000"
-#
-#      envFrom:
-#      - secretRef:
-#          name: haproxy-env-secret
+      #      env:
+      #      - name: HA_CONNECTION_TIMEOUT
+      #        value: "1000"
+      #
+      #      envFrom:
+      #      - secretRef:
+      #          name: haproxy-env-secret
 
-#      readinessProbe:
-#        timeoutSeconds: 3
-#        periodSeconds: 5
-#        failureThreshold: 3
-#        successThreshold: 1
-#
-#      livenessProbe:
-#        timeoutSeconds: 3
-#        periodSeconds: 5
-#        failureThreshold: 3
-#        successThreshold: 1
+      #      readinessProbe:
+      #        timeoutSeconds: 3
+      #        periodSeconds: 5
+      #        failureThreshold: 3
+      #        successThreshold: 1
+      #
+      #      livenessProbe:
+      #        timeoutSeconds: 3
+      #        periodSeconds: 5
+      #        failureThreshold: 3
+      #        successThreshold: 1
 
-#      configuration: |
-#
-#      the actual default configuration file can be found here https://github.com/percona/percona-server-mysql-operator/blob/main/build/haproxy-global.cfg
-#
-#        global
-#          maxconn 2048
-#          external-check
-#          insecure-fork-wanted
-#          stats socket /etc/haproxy/mysql/haproxy.sock mode 600 expose-fd listeners level admin
-#
-#        defaults
-#          default-server init-addr last,libc,none
-#          log global
-#          mode tcp
-#          retries 10
-#          timeout client 28800s
-#          timeout connect 100500
-#          timeout server 28800s
-#
-#        frontend mysql-primary-in
-#          bind *:3309 accept-proxy
-#          bind *:3306
-#          mode tcp
-#          option clitcpka
-#          default_backend mysql-primary
-#
-#        frontend mysql-replicas-in
-#          bind *:3307
-#          mode tcp
-#          option clitcpka
-#          default_backend mysql-replicas
-#
-#        frontend stats
-#          bind *:8404
-#          mode http
-#          http-request use-service prometheus-exporter if { path /metrics }
+      #      configuration: |
+      #
+      #      the actual default configuration file can be found here https://github.com/percona/percona-server-mysql-operator/blob/main/build/haproxy-global.cfg
+      #
+      #        global
+      #          maxconn 2048
+      #          external-check
+      #          insecure-fork-wanted
+      #          stats socket /etc/haproxy/mysql/haproxy.sock mode 600 expose-fd listeners level admin
+      #
+      #        defaults
+      #          default-server init-addr last,libc,none
+      #          log global
+      #          mode tcp
+      #          retries 10
+      #          timeout client 28800s
+      #          timeout connect 100500
+      #          timeout server 28800s
+      #
+      #        frontend mysql-primary-in
+      #          bind *:3309 accept-proxy
+      #          bind *:3306
+      #          mode tcp
+      #          option clitcpka
+      #          default_backend mysql-primary
+      #
+      #        frontend mysql-replicas-in
+      #          bind *:3307
+      #          mode tcp
+      #          option clitcpka
+      #          default_backend mysql-replicas
+      #
+      #        frontend stats
+      #          bind *:8404
+      #          mode http
+      #          http-request use-service prometheus-exporter if { path /metrics }
 
       affinity:
         antiAffinityTopologyKey: "kubernetes.io/hostname"
-#        advanced:
-#          nodeAffinity:
-#            requiredDuringSchedulingIgnoredDuringExecution:
-#              nodeSelectorTerms:
-#              - matchExpressions:
-#                - key: kubernetes.io/e2e-az-name
-#                  operator: In
-#                  values:
-#                  - e2e-az1
-#                  - e2e-az2
-#      topologySpreadConstraints:
-#      - labelSelector:
-#          matchLabels:
-#            app.kubernetes.io/name: percona-server
-#        maxSkew: 1
-#        topologyKey: kubernetes.io/hostname
-#        whenUnsatisfiable: DoNotSchedule
+    #        advanced:
+    #          nodeAffinity:
+    #            requiredDuringSchedulingIgnoredDuringExecution:
+    #              nodeSelectorTerms:
+    #              - matchExpressions:
+    #                - key: kubernetes.io/e2e-az-name
+    #                  operator: In
+    #                  values:
+    #                  - e2e-az1
+    #                  - e2e-az2
+    #      topologySpreadConstraints:
+    #      - labelSelector:
+    #          matchLabels:
+    #            app.kubernetes.io/name: percona-server
+    #        maxSkew: 1
+    #        topologyKey: kubernetes.io/hostname
+    #        whenUnsatisfiable: DoNotSchedule
 
-#      expose:
-#        type: ClusterIP
-#        annotations:
-#          service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-#          service.beta.kubernetes.io/aws-load-balancer-type: nlb
-#        externalTrafficPolicy: Cluster
-#        internalTrafficPolicy: Cluster
-#        labels:
-#          rack: rack-22
-#        loadBalancerIP: 127.0.0.1
-#        loadBalancerSourceRanges:
-#          - 10.0.0.0/8
-#      containerSecurityContext:
-#        privileged: true
-#      podSecurityContext:
-#        fsGroup: 1001
-#        supplementalGroups: [1001, 1002, 1003]
+    #      expose:
+    #        type: ClusterIP
+    #        annotations:
+    #          service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    #          service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    #        externalTrafficPolicy: Cluster
+    #        internalTrafficPolicy: Cluster
+    #        labels:
+    #          rack: rack-22
+    #        loadBalancerIP: 127.0.0.1
+    #        loadBalancerSourceRanges:
+    #          - 10.0.0.0/8
+    #      containerSecurityContext:
+    #        privileged: true
+    #      podSecurityContext:
+    #        fsGroup: 1001
+    #        supplementalGroups: [1001, 1002, 1003]
 
     router:
       enabled: false
       image: perconalab/percona-server-mysql-operator:main-router
       imagePullPolicy: Always
-#      initImage: percona/percona-server-mysql-operator:0.8.0
+      #      initImage: percona/percona-server-mysql-operator:0.8.0
 
       size: 3
 
@@ -267,84 +267,84 @@ spec:
 
       affinity:
         antiAffinityTopologyKey: "kubernetes.io/hostname"
-#        advanced:
-#          nodeAffinity:
-#            requiredDuringSchedulingIgnoredDuringExecution:
-#              nodeSelectorTerms:
-#              - matchExpressions:
-#                - key: kubernetes.io/e2e-az-name
-#                  operator: In
-#                  values:
-#                  - e2e-az1
-#                  - e2e-az2
-#      topologySpreadConstraints:
-#      - labelSelector:
-#          matchLabels:
-#            app.kubernetes.io/name: percona-server
-#        maxSkew: 1
-#        topologyKey: kubernetes.io/hostname
-#        whenUnsatisfiable: DoNotSchedule
+  #        advanced:
+  #          nodeAffinity:
+  #            requiredDuringSchedulingIgnoredDuringExecution:
+  #              nodeSelectorTerms:
+  #              - matchExpressions:
+  #                - key: kubernetes.io/e2e-az-name
+  #                  operator: In
+  #                  values:
+  #                  - e2e-az1
+  #                  - e2e-az2
+  #      topologySpreadConstraints:
+  #      - labelSelector:
+  #          matchLabels:
+  #            app.kubernetes.io/name: percona-server
+  #        maxSkew: 1
+  #        topologyKey: kubernetes.io/hostname
+  #        whenUnsatisfiable: DoNotSchedule
 
-#      configuration: |
-#        [default]
-#        logging_folder=/tmp/router/log
-#        [logger]
-#        level=DEBUG
+  #      configuration: |
+  #        [default]
+  #        logging_folder=/tmp/router/log
+  #        [logger]
+  #        level=DEBUG
 
-#      expose:
-#        type: ClusterIP
-#        annotations:
-#          service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-#          service.beta.kubernetes.io/aws-load-balancer-type: nlb
-#        externalTrafficPolicy: Cluster
-#        internalTrafficPolicy: Cluster
-#        labels:
-#          rack: rack-22
-#        loadBalancerIP: 127.0.0.1
-#        loadBalancerSourceRanges:
-#          - 10.0.0.0/8
+  #      expose:
+  #        type: ClusterIP
+  #        annotations:
+  #          service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+  #          service.beta.kubernetes.io/aws-load-balancer-type: nlb
+  #        externalTrafficPolicy: Cluster
+  #        internalTrafficPolicy: Cluster
+  #        labels:
+  #          rack: rack-22
+  #        loadBalancerIP: 127.0.0.1
+  #        loadBalancerSourceRanges:
+  #          - 10.0.0.0/8
 
   orchestrator:
     enabled: false
 
     image: perconalab/percona-server-mysql-operator:main-orchestrator
     imagePullPolicy: Always
-#    serviceAccountName: percona-server-mysql-operator-orchestrator
-#    initImage: percona/percona-server-mysql-operator:0.8.0
+    #    serviceAccountName: percona-server-mysql-operator-orchestrator
+    #    initImage: percona/percona-server-mysql-operator:0.8.0
 
     size: 3
 
     affinity:
       antiAffinityTopologyKey: "kubernetes.io/hostname"
-#      advanced:
-#        nodeAffinity:
-#          requiredDuringSchedulingIgnoredDuringExecution:
-#            nodeSelectorTerms:
-#            - matchExpressions:
-#              - key: kubernetes.io/e2e-az-name
-#                operator: In
-#                values:
-#                - e2e-az1
-#                - e2e-az2
-#    topologySpreadConstraints:
-#    - labelSelector:
-#        matchLabels:
-#          app.kubernetes.io/name: percona-server
-#      maxSkew: 1
-#      topologyKey: kubernetes.io/hostname
-#      whenUnsatisfiable: DoNotSchedule
+    #      advanced:
+    #        nodeAffinity:
+    #          requiredDuringSchedulingIgnoredDuringExecution:
+    #            nodeSelectorTerms:
+    #            - matchExpressions:
+    #              - key: kubernetes.io/e2e-az-name
+    #                operator: In
+    #                values:
+    #                - e2e-az1
+    #                - e2e-az2
+    #    topologySpreadConstraints:
+    #    - labelSelector:
+    #        matchLabels:
+    #          app.kubernetes.io/name: percona-server
+    #      maxSkew: 1
+    #      topologyKey: kubernetes.io/hostname
+    #      whenUnsatisfiable: DoNotSchedule
 
-#    expose:
-#      type: ClusterIP
-#      annotations:
-#        service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
-#        service.beta.kubernetes.io/aws-load-balancer-type: nlb
-#      externalTrafficPolicy: Cluster
-#      internalTrafficPolicy: Cluster
-#      labels:
-#        rack: rack-22
-#      loadBalancerSourceRanges:
-#        - 10.0.0.0/8
+    #    expose:
+    #      type: ClusterIP
+    #      annotations:
+    #        service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+    #        service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    #      externalTrafficPolicy: Cluster
+    #      internalTrafficPolicy: Cluster
+    #      labels:
+    #        rack: rack-22
+    #      loadBalancerSourceRanges:
+    #        - 10.0.0.0/8
 
     resources:
       requests:
@@ -368,69 +368,69 @@ spec:
       requests:
         memory: 150M
         cpu: 300m
-#      limits:
-#        memory: 256M
-#        cpu: 400m
+    #      limits:
+    #        memory: 256M
+    #        cpu: 400m
 
     serverHost: monitoring-service
     serverUser: admin
 
   backup:
-    enabled: true
+    enabled: false
     image: perconalab/percona-server-mysql-operator:main-backup
-#    backoffLimit: 6
+    #    backoffLimit: 6
     imagePullPolicy: Always
-#    initImage: percona/percona-server-mysql-operator:0.8.0
-#    containerSecurityContext:
-#      privileged: true
+    #    initImage: percona/percona-server-mysql-operator:0.8.0
+    #    containerSecurityContext:
+    #      privileged: true
     storages:
       s3-us-west:
         type: s3
         verifyTLS: true
-#        nodeSelector:
-#          storage: tape
-#          backupWorker: 'True'
-#        resources:
-#          requests:
-#            memory: 1G
-#            cpu: 600m
-#        affinity:
-#          nodeAffinity:
-#            requiredDuringSchedulingIgnoredDuringExecution:
-#              nodeSelectorTerms:
-#              - matchExpressions:
-#                - key: backupWorker
-#                  operator: In
-#                  values:
-#                  - 'True'
-#        topologySpreadConstraints:
-#        - labelSelector:
-#            matchLabels:
-#              app.kubernetes.io/name: percona-server
-#          maxSkew: 1
-#          topologyKey: kubernetes.io/hostname
-#          whenUnsatisfiable: DoNotSchedule
-#        tolerations:
-#          - key: "backupWorker"
-#            operator: "Equal"
-#            value: "True"
-#            effect: "NoSchedule"
-#        annotations:
-#          testName: scheduled-backup
-#        labels:
-#          backupWorker: 'True'
-#        schedulerName: 'default-scheduler'
-#        priorityClassName: 'high-priority'
-#        containerSecurityContext:
-#          privileged: true
-#        podSecurityContext:
-#          fsGroup: 1001
-#          supplementalGroups: [1001, 1002, 1003]
+        #        nodeSelector:
+        #          storage: tape
+        #          backupWorker: 'True'
+        #        resources:
+        #          requests:
+        #            memory: 1G
+        #            cpu: 600m
+        #        affinity:
+        #          nodeAffinity:
+        #            requiredDuringSchedulingIgnoredDuringExecution:
+        #              nodeSelectorTerms:
+        #              - matchExpressions:
+        #                - key: backupWorker
+        #                  operator: In
+        #                  values:
+        #                  - 'True'
+        #        topologySpreadConstraints:
+        #        - labelSelector:
+        #            matchLabels:
+        #              app.kubernetes.io/name: percona-server
+        #          maxSkew: 1
+        #          topologyKey: kubernetes.io/hostname
+        #          whenUnsatisfiable: DoNotSchedule
+        #        tolerations:
+        #          - key: "backupWorker"
+        #            operator: "Equal"
+        #            value: "True"
+        #            effect: "NoSchedule"
+        #        annotations:
+        #          testName: scheduled-backup
+        #        labels:
+        #          backupWorker: 'True'
+        #        schedulerName: 'default-scheduler'
+        #        priorityClassName: 'high-priority'
+        #        containerSecurityContext:
+        #          privileged: true
+        #        podSecurityContext:
+        #          fsGroup: 1001
+        #          supplementalGroups: [1001, 1002, 1003]
         s3:
           bucket: S3-BACKUP-BUCKET-NAME-HERE
           credentialsSecret: cluster1-s3-credentials
           region: us-west-2
-#          prefix: ""
+  #          prefix: ""
 
   toolkit:
     image: perconalab/percona-server-mysql-operator:main-toolkit

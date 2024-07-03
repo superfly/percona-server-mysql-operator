@@ -35,48 +35,49 @@ spec:
         app.kubernetes.io/name: percona-server-mysql-operator
     spec:
       containers:
-      - args:
-        - --leader-elect
-        command:
-        - /usr/local/bin/percona-server-mysql-operator
-        env:
-        - name: LOG_STRUCTURED
-          value: "false"
-        - name: LOG_LEVEL
-          value: INFO
-        - name: WATCH_NAMESPACE
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-        - name: DISABLE_TELEMETRY
-          value: "false"
-        image: perconalab/percona-server-mysql-operator:main
-        imagePullPolicy: Always
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 8081
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        name: manager
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 8081
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        resources:
-          limits:
-            cpu: 200m
-            memory: 100Mi
-          requests:
-            cpu: 100m
-            memory: 20Mi
-        securityContext:
-          allowPrivilegeEscalation: false
+        - args:
+            - --leader-elect
+          command:
+            - /usr/local/bin/percona-server-mysql-operator
+          env:
+            - name: LOG_STRUCTURED
+              value: "false"
+            - name: LOG_LEVEL
+              value: INFO
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: DISABLE_TELEMETRY
+              value: "false"
+          image: flyio/percona-server-mysql-operator:fks-2
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          name: manager
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 200m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 20Mi
+          securityContext:
+            allowPrivilegeEscalation: false
       securityContext:
         runAsNonRoot: true
       serviceAccountName: percona-server-mysql-operator
       terminationGracePeriodSeconds: 10
 ---
+

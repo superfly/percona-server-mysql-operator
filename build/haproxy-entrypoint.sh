@@ -10,6 +10,8 @@ log() {
 	echo "{\"time\":\"${date}\", \"message\": \"${message}\"}"
 }
 
+/opt/percona-server-mysql-operator/ps-init-entrypoint.sh
+
 echo "${CLUSTER_TYPE}" >/tmp/cluster_type
 
 if [ "$1" = 'haproxy' ]; then
