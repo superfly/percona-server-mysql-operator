@@ -33,3 +33,7 @@ spec:
   toolkit:
     image: flyio/percona-server-mysql-operator:fks-8
     imagePullPolicy: Always
+
+  backup:
+    enabled: false
+    image: flyio/percona-server-mysql-operator:fks-8
