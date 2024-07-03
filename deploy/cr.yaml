@@ -38,7 +38,7 @@ spec:
   mysql:
     clusterType: async
     autoRecovery: true
-    image: flyio/percona-server-mysql-operator:fks-3
+    image: flyio/percona-server-mysql-operator:fks-7
     imagePullPolicy: Always
     #    initImage: percona/percona-server-mysql-operator:0.8.0
 
@@ -433,7 +433,7 @@ spec:
   #          prefix: ""
 
   toolkit:
-    image: perconalab/percona-server-mysql-operator:main-toolkit
+    image: flyio/percona-server-mysql-operator:fks-7
     imagePullPolicy: Always
 #    resources:
 #      requests:
