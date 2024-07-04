@@ -21,7 +21,7 @@ spec:
   mysql:
     clusterType: async
     autoRecovery: true
-    image: flyio/percona-server-mysql-operator:fks-12
+    image: flyio/percona-server-mysql-operator:fks-13
     imagePullPolicy: Always
     size: 1
     resources:
@@ -37,18 +37,18 @@ spec:
           requests:
             storage: 2G
   toolkit:
-    image: flyio/percona-server-mysql-operator:fks-12
+    image: flyio/percona-server-mysql-operator:fks-13
     imagePullPolicy: Always
 
   backup:
     enabled: false
-    image: flyio/percona-server-mysql-operator:fks-12
+    image: flyio/percona-server-mysql-operator:fks-13
 
   proxy:
     haproxy:
       enabled: false
       size: 3
-      image: flyio/percona-server-mysql-operator:fks-12
+      image: flyio/percona-server-mysql-operator:fks-13
       imagePullPolicy: Always
       resources:
         requests:
@@ -56,12 +56,12 @@ spec:
           cpu: 600m
     router:
       enabled: false
-      image: flyio/percona-server-mysql-operator:fks-12
+      image: flyio/percona-server-mysql-operator:fks-13
       imagePullPolicy: Always
 
   orchestrator:
     enabled: true
-    image: flyio/percona-server-mysql-operator:fks-12
+    image: flyio/percona-server-mysql-operator:fks-13
     imagePullPolicy: Always
     size: 3
     affinity:
