@@ -9,7 +9,7 @@ spec:
     mysqlSize: true
     orchestrator: false
     orchestratorSize: false
-    proxy: false
+    proxy: true
     proxySize: false
   crVersion: 0.8.0
   secretsName: cluster1-secrets
