@@ -51,7 +51,7 @@ spec:
                   fieldPath: metadata.namespace
             - name: DISABLE_TELEMETRY
               value: "false"
-          image: flyio/percona-server-mysql-operator:fks-15
+          image: flyio/percona-server-mysql-operator:fks-16
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
