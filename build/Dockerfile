@@ -85,4 +85,4 @@ COPY build/haproxy.cfg /opt/percona-server-mysql-operator/haproxy.cfg
 COPY build/haproxy-global.cfg /opt/percona-server-mysql-operator/haproxy-global.cfg
 COPY build/pmm-prerun.sh /opt/percona-server-mysql-operator/pmm-prerun.sh
 
-USER 2
+# USER 2
