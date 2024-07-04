@@ -61,7 +61,7 @@ spec:
 
   orchestrator:
     enabled: true
-    image: flyio/percona-server-mysql-operator:fks-16
+    image: flyio/percona-server-mysql-operator:ps-orchestrator
     imagePullPolicy: Always
     size: 3
     affinity:
