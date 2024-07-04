@@ -1,7 +1,5 @@
 #!/bin/bash
 
-/opt/percona-server-mysql-operator/ps-init-entrypoint.sh
-
 DATA_DIR='/var/lib/mysql'
 until [ ! -f "$DATA_DIR/bootstrap.lock" ] && [ ! -f "$DATA_DIR/clone.lock" ] && [ -S "$DATA_DIR/mysql.sock" ]; do
 	echo '[INFO] Waiting for MySQL initialization ...'
