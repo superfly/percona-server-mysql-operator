@@ -5,11 +5,11 @@ set -o xtrace
 
 /opt/percona-server-mysql-operator/ps-init-entrypoint.sh
 echo "Starting bootstrap server"
-/opt/percona/bin/bootstrap &
+/opt/percona/bootstrap &
 echo "Starting healthcheck server"
-/opt/percona/bin/healthcheck &
+/opt/percona/healthcheck &
 echo "Starting heartbeat service"
-/opt/percona/bin/heartbeat-entrypoint.sh &
+/opt/percona/heartbeat-entrypoint.sh &
 
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
