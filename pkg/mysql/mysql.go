@@ -542,7 +542,7 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 				MountPath: configMountPath,
 			},
 		},
-		Command:                  []string{"/opt/percona-server-mysql-operator/ps-entrypoint.sh"},
+		Command:                  []string{"/opt/percona/ps-entrypoint.sh"},
 		Args:                     []string{"mysqld"},
 		TerminationMessagePath:   "/dev/termination-log",
 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
