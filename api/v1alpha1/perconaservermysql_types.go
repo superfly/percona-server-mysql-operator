@@ -666,7 +666,7 @@ func (cr *PerconaServerMySQL) CheckNSetDefaults(ctx context.Context, serverVersi
 	}
 
 	if cr.Spec.MySQL.PodSecurityContext == nil {
-		cr.Spec.MySQL.PodSecurityContext = sc
+		//	cr.Spec.MySQL.PodSecurityContext = sc
 	}
 
 	if cr.Spec.Orchestrator.PodSecurityContext == nil {

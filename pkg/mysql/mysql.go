@@ -520,10 +520,11 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		Env:             env,
 		EnvFrom:         spec.EnvFrom,
 		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      apiv1alpha1.BinVolumeName,
-				MountPath: apiv1alpha1.BinVolumePath,
-			},
+			// Link scripts instead of mounting them, since we don't support EmptyDir yet.
+			// {
+			// 	Name:      apiv1alpha1.BinVolumeName,
+			// 	MountPath: apiv1alpha1.BinVolumePath,
+			// },
 			{
 				Name:      DataVolumeName,
 				MountPath: DataMountPath,

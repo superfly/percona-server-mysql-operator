@@ -21,7 +21,7 @@ spec:
   mysql:
     clusterType: async
     autoRecovery: true
-    image: flyio/percona-server-mysql-operator:fks-9
+    image: flyio/percona-server-mysql-operator:fks-10
     imagePullPolicy: Always
     size: 1
     resources:
@@ -29,6 +29,10 @@ spec:
         memory: 1G
       limits:
         memory: 2G
+    podSecurityContext:
+      privileged: true
+      fsGroup: 1001
+      supplementalGroups: [1001, 1002, 1003]
     affinity:
       antiAffinityTopologyKey: "kubernetes.io/hostname"
     volumeSpec:
@@ -37,18 +41,18 @@ spec:
           requests:
             storage: 2G
   toolkit:
-    image: flyio/percona-server-mysql-operator:fks-9
+    image: flyio/percona-server-mysql-operator:fks-10
     imagePullPolicy: Always
 
   backup:
     enabled: false
-    image: flyio/percona-server-mysql-operator:fks-9
+    image: flyio/percona-server-mysql-operator:fks-10
 
   proxy:
     haproxy:
       enabled: false
       size: 3
-      image: flyio/percona-server-mysql-operator:fks-9
+      image: flyio/percona-server-mysql-operator:fks-10
       imagePullPolicy: Always
       resources:
         requests:
@@ -56,12 +60,12 @@ spec:
           cpu: 600m
     router:
       enabled: false
-      image: flyio/percona-server-mysql-operator:fks-9
+      image: flyio/percona-server-mysql-operator:fks-10
       imagePullPolicy: Always
 
   orchestrator:
     enabled: true
-    image: flyio/percona-server-mysql-operator:fks-9
+    image: flyio/percona-server-mysql-operator:fks-10
     imagePullPolicy: Always
     size: 3
     affinity:
