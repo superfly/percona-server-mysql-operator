@@ -3,7 +3,6 @@ set -eo pipefail
 shopt -s nullglob
 set -o xtrace
 
-/opt/percona-server-mysql-operator/ps-init-entrypoint.sh
 echo "Starting bootstrap server"
 /opt/percona/bootstrap &
 echo "Starting healthcheck server"
@@ -154,8 +153,10 @@ create_default_cnf() {
 	else
 		CLUSTER_NAME="$(hostname -f | cut -d'.' -f2)"
 		SERVER_NUM=${HOSTNAME/$CLUSTER_NAME-/}
-		SERVER_ID=${CLUSTER_HASH}${SERVER_NUM}
-		FQDN="${HOSTNAME}.${SERVICE_NAME}.$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+    HOSTNAME_HASH=$(echo -n "$HOSTNAME" | cksum | awk '{print $1}')
+		# SERVER_ID=${CLUSTER_HASH}${SERVER_NUM}
+    SERVER_ID=${CLUSTER_HASH}${HOSTNAME_HASH}
+    FQDN="${HOSTNAME}.${SERVICE_NAME}.$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)"
 	fi
 
 	echo '[mysqld]' >$CFG
