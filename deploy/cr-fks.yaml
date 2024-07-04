@@ -7,7 +7,7 @@ metadata:
 spec:
   unsafeFlags:
     mysqlSize: true
-    orchestrator: false
+    orchestrator: true
     orchestratorSize: false
     proxy: true
     proxySize: false
@@ -60,7 +60,7 @@ spec:
       imagePullPolicy: Always
 
   orchestrator:
-    enabled: true
+    enabled: false
     image: flyio/percona-server-mysql-operator:ps-orchestrator
     imagePullPolicy: Always
     size: 3
