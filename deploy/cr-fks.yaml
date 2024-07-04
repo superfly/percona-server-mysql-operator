@@ -29,10 +29,6 @@ spec:
         memory: 1G
       limits:
         memory: 2G
-    podSecurityContext:
-      privileged: true
-      fsGroup: 1001
-      supplementalGroups: [1001, 1002, 1003]
     affinity:
       antiAffinityTopologyKey: "kubernetes.io/hostname"
     volumeSpec:
