@@ -1,7 +1,7 @@
 apiVersion: ps.percona.com/v1alpha1
 kind: PerconaServerMySQL
 metadata:
-  name: cluster1
+  name: cluster2
   finalizers:
     - percona.com/delete-mysql-pods-in-order
 spec:
@@ -29,6 +29,25 @@ spec:
         memory: 1G
       limits:
         memory: 2G
+    readinessProbe:
+      initialDelaySeconds: 30
+      timeoutSeconds: 10
+      periodSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
+
+    livenessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 10
+      periodSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
+    startupProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 10
+      periodSeconds: 10
+      failureThreshold: 3
+      successThreshold: 1
     affinity:
       antiAffinityTopologyKey: "kubernetes.io/hostname"
     volumeSpec:
