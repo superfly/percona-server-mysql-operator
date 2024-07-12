@@ -21,7 +21,7 @@ spec:
   mysql:
     clusterType: async
     autoRecovery: true
-    image: flyio/percona-server-mysql-operator:ps-mysql-4
+    image: flyio/percona-server-mysql-operator:ps-mysql-6
     imagePullPolicy: Always
     size: 1
     resources:
@@ -56,7 +56,7 @@ spec:
           requests:
             storage: 2G
   toolkit:
-    image: flyio/percona-server-mysql-operator:fks-16
+    image: flyio/percona-server-mysql-operator:ps-toolkit-1
     imagePullPolicy: Always
 
   backup:
