@@ -1,7 +1,7 @@
 apiVersion: ps.percona.com/v1alpha1
 kind: PerconaServerMySQL
 metadata:
-  name: cluster2
+  name: cluster3
   finalizers:
     - percona.com/delete-mysql-pods-in-order
 spec:
@@ -14,14 +14,14 @@ spec:
   crVersion: 0.8.0
   secretsName: cluster1-secrets
   sslSecretName: cluster1-ssl
-  updateStrategy: SmartUpdate
+  updateStrategy: RollingUpdate
   upgradeOptions:
     versionServiceEndpoint: https://check.percona.com
     apply: disabled
   mysql:
     clusterType: async
     autoRecovery: true
-    image: flyio/percona-server-mysql-operator:ps-mysql-7
+    image: flyio/percona-server-mysql-operator:ps-mysql-8
     imagePullPolicy: Always
     size: 1
     resources:
@@ -49,7 +49,7 @@ spec:
       failureThreshold: 3
       successThreshold: 1
     affinity:
-      antiAffinityTopologyKey: "kubernetes.io/hostname"
+      antiAffinityTopologyKey: none
     volumeSpec:
       persistentVolumeClaim:
         resources:
@@ -65,17 +65,17 @@ spec:
 
   proxy:
     haproxy:
-      enabled: false
-      size: 3
-      image: flyio/percona-server-mysql-operator:fks-16
+      enabled: true
+      size: 2
+      image: flyio/percona-server-mysql-operator:ps-haproxy
       imagePullPolicy: Always
       resources:
         requests:
-          memory: 1G
+          memory: 256M
           cpu: 600m
     router:
       enabled: false
-      image: flyio/percona-server-mysql-operator:fks-16
+      image: flyio/percona-server-mysql-operator:ps-router
       imagePullPolicy: Always
 
   orchestrator:
