@@ -511,6 +511,10 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 	}
 	env = append(env, spec.Env...)
 
+	// FKS: Ensure heartbeat sidecar environment vars are added to the mysqld container
+	hb := heartbeatContainer(cr)
+	env = append(env, hb.Env...)
+
 	container := corev1.Container{
 		Name:            ComponentName,
 		Image:           spec.Image,
@@ -520,7 +524,7 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		Env:             env,
 		EnvFrom:         spec.EnvFrom,
 		VolumeMounts: []corev1.VolumeMount{
-			// Link scripts instead of mounting them, since we don't support EmptyDir yet.
+			// FKS: Link scripts instead of mounting them, since we don't support EmptyDir yet.
 			// {
 			// 	Name:      apiv1alpha1.BinVolumeName,
 			// 	MountPath: apiv1alpha1.BinVolumePath,
@@ -541,6 +545,11 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 				Name:      configVolumeName,
 				MountPath: configMountPath,
 			},
+			// FKS: Add backup-logs volume mount from the backup sidecar
+			{
+				Name:      "backup-logs",
+				MountPath: BackupLogDir,
+			},
 		},
 		Command:                  []string{"/opt/percona/ps-entrypoint.sh"},
 		Args:                     []string{"mysqld"},
@@ -550,7 +559,8 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		LivenessProbe:            k8s.HTTPCheckProbe(spec.LivenessProbe, "/liveness", 8090),
 		ReadinessProbe:           k8s.HTTPCheckProbe(spec.ReadinessProbe, "/readiness", 8090),
 		StartupProbe:             k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 8091),
-		// Disabled since we only use async replication. This only applies to group replication.
+		// FKS: Disabled since we only use async replication. This only applies to group replication.
+		// TODO: Support group replication by changing this to an HTTP action, similiar to how liveness/readiness probes are done.
 		// Lifecycle: &corev1.Lifecycle{
 		// 	PreStop: &corev1.LifecycleHandler{
 		// 		Exec: &corev1.ExecAction{
