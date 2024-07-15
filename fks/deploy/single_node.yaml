@@ -5,8 +5,11 @@ metadata:
   finalizers:
     - percona.com/delete-mysql-pods-in-order
 spec:
+  # Single node installs need these settings, since orchestrator and haproxy are required for async replication
   unsafeFlags:
     mysqlSize: true
+    orchestrator: true
+    proxy: true
   crVersion: 0.8.0
   secretsName: cluster1-secrets
   sslSecretName: cluster1-ssl
