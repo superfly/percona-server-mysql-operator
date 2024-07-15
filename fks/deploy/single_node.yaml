@@ -22,6 +22,7 @@ spec:
     autoRecovery: true
     image: flyio/percona-server-mysql-operator:ps-mysql
     imagePullPolicy: Always
+    terminationGracePeriodSeconds: 30
     size: 1
     resources:
       requests:
