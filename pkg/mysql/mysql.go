@@ -11,6 +11,7 @@ import (
 	apiv1alpha1 "github.com/percona/percona-server-mysql-operator/api/v1alpha1"
 	"github.com/percona/percona-server-mysql-operator/pkg/k8s"
 	"github.com/percona/percona-server-mysql-operator/pkg/naming"
+	"github.com/percona/percona-server-mysql-operator/pkg/pmm"
 	"github.com/percona/percona-server-mysql-operator/pkg/util"
 )
 
@@ -156,6 +157,7 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, configHash, tlsH
 					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
+					// FKS: InitContainers are not supported, but here the initContainer is only used to copy scripts, which is done in the Docker build.
 					// InitContainers: []corev1.Container{
 					// 	k8s.InitContainer(
 					// 		ComponentName,
@@ -462,15 +464,15 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret) []cor
 	containers := []corev1.Container{mysqldContainer(cr)}
 
 	if backup := cr.Spec.Backup; backup != nil && backup.Enabled {
-		// containers = append(containers, backupContainer(cr))
+		containers = append(containers, backupContainer(cr))
 	}
 
 	if toolkit := cr.Spec.Toolkit; toolkit != nil && cr.Spec.MySQL.IsAsync() && cr.OrchestratorEnabled() {
-		//containers = append(containers, heartbeatContainer(cr))
+		containers = append(containers, heartbeatContainer(cr))
 	}
 
 	if cr.PMMEnabled(secret) {
-		// containers = append(containers, pmm.Container(cr, secret, ComponentName))
+		containers = append(containers, pmm.Container(cr, secret, ComponentName))
 	}
 
 	return appendUniqueContainers(containers, cr.Spec.MySQL.Sidecars...)
@@ -511,10 +513,6 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 	}
 	env = append(env, spec.Env...)
 
-	// FKS: Ensure heartbeat sidecar environment vars are added to the mysqld container
-	hb := heartbeatContainer(cr)
-	env = append(env, hb.Env...)
-
 	container := corev1.Container{
 		Name:            ComponentName,
 		Image:           spec.Image,
@@ -524,7 +522,7 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		Env:             env,
 		EnvFrom:         spec.EnvFrom,
 		VolumeMounts: []corev1.VolumeMount{
-			// FKS: Link scripts instead of mounting them, since we don't support EmptyDir yet.
+			// FKS: Link scripts in the Docker build instead of mounting them, since we don't support EmptyDir yet.
 			// {
 			// 	Name:      apiv1alpha1.BinVolumeName,
 			// 	MountPath: apiv1alpha1.BinVolumePath,
@@ -586,10 +584,11 @@ func backupContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      apiv1alpha1.BinVolumeName,
-				MountPath: apiv1alpha1.BinVolumePath,
-			},
+			// FKS: Link scripts in the Docker build instead of mounting them, since we don't support EmptyDir yet.
+			// {
+			// 	Name:      apiv1alpha1.BinVolumeName,
+			// 	MountPath: apiv1alpha1.BinVolumePath,
+			// },
 			{
 				Name:      DataVolumeName,
 				MountPath: DataMountPath,
@@ -627,10 +626,11 @@ func heartbeatContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		},
 		Ports: []corev1.ContainerPort{},
 		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      apiv1alpha1.BinVolumeName,
-				MountPath: apiv1alpha1.BinVolumePath,
-			},
+			// FKS: Link scripts in the Docker build instead of mounting them, since we don't support EmptyDir yet.
+			// {
+			// 	Name:      apiv1alpha1.BinVolumeName,
+			// 	MountPath: apiv1alpha1.BinVolumePath,
+			// },
 			{
 				Name:      DataVolumeName,
 				MountPath: DataMountPath,

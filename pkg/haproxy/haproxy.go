@@ -10,7 +10,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	apiv1alpha1 "github.com/percona/percona-server-mysql-operator/api/v1alpha1"
-	"github.com/percona/percona-server-mysql-operator/pkg/k8s"
 	"github.com/percona/percona-server-mysql-operator/pkg/mysql"
 	"github.com/percona/percona-server-mysql-operator/pkg/naming"
 	"github.com/percona/percona-server-mysql-operator/pkg/pmm"
@@ -166,14 +165,15 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, configHash, tlsH
 				Spec: corev1.PodSpec{
 					NodeSelector: cr.Spec.Proxy.HAProxy.NodeSelector,
 					Tolerations:  cr.Spec.Proxy.HAProxy.Tolerations,
-					InitContainers: []corev1.Container{
-						k8s.InitContainer(
-							ComponentName,
-							initImage,
-							cr.Spec.Proxy.HAProxy.ImagePullPolicy,
-							cr.Spec.Proxy.HAProxy.ContainerSecurityContext,
-						),
-					},
+					// FKS: InitContainers are not supported, but here the initContainer is only used to copy scripts, which is done in the Docker build.
+					// InitContainers: []corev1.Container{
+					// 	k8s.InitContainer(
+					// 		ComponentName,
+					// 		initImage,
+					// 		cr.Spec.Proxy.HAProxy.ImagePullPolicy,
+					// 		cr.Spec.Proxy.HAProxy.ContainerSecurityContext,
+					// 	),
+					// },
 					Containers:                containers(cr, secret),
 					Affinity:                  cr.Spec.Proxy.HAProxy.GetAffinity(labels),
 					TopologySpreadConstraints: cr.Spec.Proxy.HAProxy.GetTopologySpreadConstraints(labels),
@@ -183,18 +183,19 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, configHash, tlsH
 					SchedulerName: "default-scheduler",
 					DNSPolicy:     corev1.DNSClusterFirst,
 					Volumes: []corev1.Volume{
-						{
-							Name: "bin",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
-						},
-						{
-							Name: "haproxy-config",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
-						},
+						// EmptyDir volumes are not supported.
+						// {
+						// 	Name: "bin",
+						// 	VolumeSource: corev1.VolumeSource{
+						// 		EmptyDir: &corev1.EmptyDirVolumeSource{},
+						// 	},
+						// },
+						// {
+						// 	Name: "haproxy-config",
+						// 	VolumeSource: corev1.VolumeSource{
+						// 		EmptyDir: &corev1.EmptyDirVolumeSource{},
+						// 	},
+						// },
 						{
 							Name: credsVolumeName,
 							VolumeSource: corev1.VolumeSource{
@@ -315,14 +316,16 @@ func haproxyContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      "bin",
-				MountPath: "/opt/percona",
-			},
-			{
-				Name:      "haproxy-config",
-				MountPath: "/etc/haproxy/mysql",
-			},
+			// EmptyDir volumes are not supported.
+			// These directories are created in the Docker build instead.
+			// {
+			// 	Name:      "bin",
+			// 	MountPath: "/opt/percona",
+			// },
+			// {
+			// 	Name:      "haproxy-config",
+			// 	MountPath: "/etc/haproxy/mysql",
+			// },
 			{
 				Name:      credsVolumeName,
 				MountPath: CredsMountPath,
