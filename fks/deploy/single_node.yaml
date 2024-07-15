@@ -40,5 +40,13 @@ spec:
     imagePullPolicy: Always
 
   backup:
-    enabled: false
+    enabled: true
     image: flyio/percona-server-mysql-operator:ps-mysql
+    storages:
+      tigris:
+        type: s3
+        s3:
+          bucket: js-mysql-backup
+          region: auto
+          credentialsSecret: s3-credentials
+          endpointUrl: https://fly.storage.tigris.dev
