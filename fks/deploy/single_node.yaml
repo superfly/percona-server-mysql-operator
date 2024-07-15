@@ -1,0 +1,41 @@
+apiVersion: ps.percona.com/v1alpha1
+kind: PerconaServerMySQL
+metadata:
+  name: js-single-node
+  finalizers:
+    - percona.com/delete-mysql-pods-in-order
+spec:
+  unsafeFlags:
+    mysqlSize: true
+  crVersion: 0.8.0
+  secretsName: cluster1-secrets
+  sslSecretName: cluster1-ssl
+  updateStrategy: RollingUpdate
+  upgradeOptions:
+    versionServiceEndpoint: https://check.percona.com
+    apply: disabled
+  mysql:
+    clusterType: async
+    autoRecovery: true
+    image: flyio/percona-server-mysql-operator:ps-mysql
+    imagePullPolicy: Always
+    size: 1
+    resources:
+      requests:
+        memory: 1G
+      limits:
+        memory: 2G
+    affinity:
+      antiAffinityTopologyKey: none
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 2G
+  toolkit:
+    image: flyio/percona-server-mysql-operator:ps-mysql
+    imagePullPolicy: Always
+
+  backup:
+    enabled: false
+    image: flyio/percona-server-mysql-operator:ps-mysql

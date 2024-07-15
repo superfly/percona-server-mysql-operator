@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: cluster3
+  name: js-single-node
 spec:
   selector:
-    app.kubernetes.io/instance: cluster3
+    app.kubernetes.io/instance: js-single-node
   ports:
     - name: mysql
       protocol: TCP
