@@ -263,7 +263,7 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, configHash, tlsH
 						},
 						spec.SidecarVolumes...,
 					),
-					//SecurityContext: spec.PodSecurityContext,
+					SecurityContext: spec.PodSecurityContext,
 				},
 			},
 		},

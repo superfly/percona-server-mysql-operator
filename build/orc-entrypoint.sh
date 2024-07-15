@@ -53,7 +53,4 @@ cat "${temp}" >"${ORC_CONF_PATH}/orc-topology.cnf"
 rm "${temp}"
 set -o xtrace
 
-# Check for new mysql nodes in the background here instead of in a sidecar
-/opt/percona/peer-list -on-change=/usr/bin/add_mysql_nodes.sh -service=$(MYSQL_SERVICE) &
-
 exec "$@"

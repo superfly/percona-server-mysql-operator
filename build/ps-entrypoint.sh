@@ -7,8 +7,6 @@ echo "Starting bootstrap server"
 /opt/percona/bootstrap &
 echo "Starting healthcheck server"
 /opt/percona/healthcheck &
-echo "Starting heartbeat service"
-/opt/percona/heartbeat-entrypoint.sh &
 
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then

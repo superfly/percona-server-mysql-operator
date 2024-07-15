@@ -30,8 +30,10 @@ RUN dnf update && dnf install microdnf && percona-release enable tools release &
     microdnf clean all; \
     rm -rf /var/cache/dnf /var/cache/yum
 
+# Create directories created as emptyDir volumes in the operator
 RUN install -d -o 1001 -g 0 -m 0775 /backup
+RUN install -d -o 1001 -g 0 -m 0775 /var/log/xtrabackup
 
 USER mysql
 
-COPY --from=flyio/percona-server-mysql-operator:fks-24 /opt/percona-server-mysql-operator /opt/percona
+COPY --from=flyio/percona-server-mysql-operator:js-fks /opt/percona-server-mysql-operator /opt/percona

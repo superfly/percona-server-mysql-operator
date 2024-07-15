@@ -221,7 +221,7 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 	containers := make([]corev1.Container, 1, len(sidecars)+1)
 	containers[0] = container(cr)
 	return containers
-	//return append(containers, sidecars...)
+	return append(containers, sidecars...)
 }
 
 func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
