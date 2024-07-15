@@ -576,6 +576,7 @@ func backupContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		Name:            "xtrabackup",
 		Image:           cr.Spec.Backup.Image,
 		ImagePullPolicy: cr.Spec.Backup.ImagePullPolicy,
+		Resources:       cr.Spec.Backup.Resources,
 		Env:             []corev1.EnvVar{},
 		Ports: []corev1.ContainerPort{
 			{

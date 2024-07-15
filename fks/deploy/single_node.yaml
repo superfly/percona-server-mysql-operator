@@ -42,6 +42,11 @@ spec:
   backup:
     enabled: true
     image: flyio/percona-server-mysql-operator:ps-mysql
+    resources:
+      requests:
+        memory: 1G
+      limits:
+        memory: 2G
     storages:
       tigris:
         type: s3
