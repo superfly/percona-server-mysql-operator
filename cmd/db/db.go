@@ -28,7 +28,7 @@ func NewDatabase(ctx context.Context, user apiv1alpha1.SystemUser, pass, host st
 	config.User = string(user)
 	config.Passwd = pass
 	config.Net = "tcp"
-	config.Addr = fmt.Sprintf("%s:%d", host, port)
+	config.Addr = fmt.Sprintf("[%s]:%d", host, port)
 	config.DBName = "performance_schema"
 	config.Params = map[string]string{
 		"interpolateParams": "true",

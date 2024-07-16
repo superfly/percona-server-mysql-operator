@@ -272,7 +272,7 @@ func getPodIP() (string, error) {
 		return "", errors.Wrapf(err, "lookup %s", hostname)
 	}
 
-	return addrs[0], nil
+	return addrs[1], nil
 }
 
 func getPodFQDN(svcName string) (string, error) {
