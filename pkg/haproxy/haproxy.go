@@ -183,7 +183,6 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, configHash, tlsH
 					SchedulerName: "default-scheduler",
 					DNSPolicy:     corev1.DNSClusterFirst,
 					Volumes: []corev1.Volume{
-						// EmptyDir volumes are not supported.
 						// {
 						// 	Name: "bin",
 						// 	VolumeSource: corev1.VolumeSource{
@@ -316,8 +315,6 @@ func haproxyContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			// EmptyDir volumes are not supported.
-			// These directories are created in the Docker build instead.
 			// {
 			// 	Name:      "bin",
 			// 	MountPath: "/opt/percona",
@@ -370,14 +367,14 @@ func mysqlMonitContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		Env:     env,
 		EnvFrom: spec.EnvFrom,
 		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      "bin",
-				MountPath: "/opt/percona",
-			},
-			{
-				Name:      "haproxy-config",
-				MountPath: "/etc/haproxy/mysql",
-			},
+			// {
+			// 	Name:      "bin",
+			// 	MountPath: "/opt/percona",
+			// },
+			// {
+			// 	Name:      "haproxy-config",
+			// 	MountPath: "/etc/haproxy/mysql",
+			// },
 			{
 				Name:      credsVolumeName,
 				MountPath: CredsMountPath,
