@@ -48,7 +48,7 @@ func getPodIP(hostname string) (string, error) {
 	}
 	log.Println("lookup", hostname, addrs)
 
-	return addrs[0], nil
+	return addrs[1], nil
 }
 
 func lookup(svcName string) (sets.Set[string], error) {
