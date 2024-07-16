@@ -38,6 +38,11 @@ spec:
   toolkit:
     image: flyio/percona-server-mysql-operator:ps-mysql
     imagePullPolicy: Always
+    resources:
+      requests:
+        memory: 1G
+      limits:
+        memory: 2G
 
   backup:
     enabled: true
