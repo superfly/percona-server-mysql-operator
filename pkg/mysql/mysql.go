@@ -554,9 +554,11 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		TerminationMessagePath:   "/dev/termination-log",
 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 		SecurityContext:          spec.ContainerSecurityContext,
-		LivenessProbe:            k8s.HTTPCheckProbe(spec.LivenessProbe, "/liveness", 8090),
-		ReadinessProbe:           k8s.HTTPCheckProbe(spec.ReadinessProbe, "/readiness", 8090),
-		StartupProbe:             k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 8091),
+		// FKS: Disabled since we don't support probes yet.
+		// LivenessProbe:            k8s.HTTPCheckProbe(spec.LivenessProbe, "/liveness", 8090),
+		// ReadinessProbe:           k8s.HTTPCheckProbe(spec.ReadinessProbe, "/readiness", 8090),
+		// StartupProbe:             k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 8091),
+
 		// FKS: Disabled since we only use async replication. This only applies to group replication.
 		// TODO: Support group replication by changing this to an HTTP action, similiar to how liveness/readiness probes are done.
 		// Lifecycle: &corev1.Lifecycle{
