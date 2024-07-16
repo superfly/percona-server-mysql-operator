@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	apiv1alpha1 "github.com/percona/percona-server-mysql-operator/api/v1alpha1"
-	"github.com/percona/percona-server-mysql-operator/pkg/k8s"
 	"github.com/percona/percona-server-mysql-operator/pkg/mysql"
 	"github.com/percona/percona-server-mysql-operator/pkg/naming"
 	"github.com/percona/percona-server-mysql-operator/pkg/util"
@@ -139,14 +138,14 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, tlsHash string) 
 					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
-					InitContainers: []corev1.Container{
-						k8s.InitContainer(
-							ComponentName,
-							initImage,
-							spec.ImagePullPolicy,
-							spec.ContainerSecurityContext,
-						),
-					},
+					// InitContainers: []corev1.Container{
+					// 	k8s.InitContainer(
+					// 		ComponentName,
+					// 		initImage,
+					// 		spec.ImagePullPolicy,
+					// 		spec.ContainerSecurityContext,
+					// 	),
+					// },
 					NodeSelector:                  cr.Spec.Orchestrator.NodeSelector,
 					Tolerations:                   cr.Spec.Orchestrator.Tolerations,
 					Containers:                    containers(cr),
@@ -220,7 +219,6 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 	sidecars := sidecarContainers(cr)
 	containers := make([]corev1.Container, 1, len(sidecars)+1)
 	containers[0] = container(cr)
-	return containers
 	return append(containers, sidecars...)
 }
 
