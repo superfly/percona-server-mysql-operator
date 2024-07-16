@@ -160,8 +160,10 @@ create_default_cnf() {
 	echo '[mysqld]' >$CFG
 	sed -i "/\[mysqld\]/a read_only=ON" $CFG
 	sed -i "/\[mysqld\]/a server_id=${SERVER_ID}" $CFG
-	sed -i "/\[mysqld\]/a admin-address=${POD_IP}" $CFG
-	sed -i "/\[mysqld\]/a report_host=${FQDN}" $CFG
+	#sed -i "/\[mysqld\]/a admin-address=${POD_IP}" $CFG
+	#sed -i "/\[mysqld\]/a report_host=${FQDN}" $CFG
+	sed -i "/\[mysqld\]/a admin-address=${FLY_PRIVATE_IP}" $CFG
+	sed -i "/\[mysqld\]/a report_host=${FLY_PRIVATE_IP}" $CFG
 	sed -i "/\[mysqld\]/a report_port=3306" $CFG
 	sed -i "/\[mysqld\]/a gtid-mode=ON" $CFG
 	sed -i "/\[mysqld\]/a enforce-gtid-consistency=ON" $CFG
