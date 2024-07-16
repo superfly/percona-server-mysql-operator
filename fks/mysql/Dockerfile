@@ -26,8 +26,8 @@ RUN dnf update && dnf install microdnf && percona-release enable tools release &
     procps-ng \
     qpress \
     lz4 \
-    zstd \
-    microdnf clean all; \
+    zstd && \
+    microdnf clean all && \
     rm -rf /var/cache/dnf /var/cache/yum
 
 # Create directories created as emptyDir volumes in the operator
