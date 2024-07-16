@@ -8,6 +8,7 @@ spec:
   # Two-node install is considered unsafe
   unsafeFlags:
     mysqlSize: true
+    orchestratorSize: true
   crVersion: 0.8.0
   secretsName: cluster1-secrets
   sslSecretName: cluster1-ssl
@@ -81,7 +82,7 @@ spec:
     haproxy:
       enabled: true
       size: 1
-      image: perconalab/percona-server-mysql-operator:main-haproxy
+      image: flyio/percona-server-mysql-operator:ps-haproxy
       imagePullPolicy: Always
       resources:
         requests:
