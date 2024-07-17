@@ -9,6 +9,7 @@ spec:
   unsafeFlags:
     mysqlSize: true
     orchestratorSize: true
+    proxySize: true
   crVersion: 0.8.0
   secretsName: cluster1-secrets
   sslSecretName: cluster1-ssl

@@ -251,7 +251,13 @@ func getPodIP() (string, error) {
 		return "", errors.Wrapf(err, "lookup %s", hostname)
 	}
 
-	return addrs[1], nil
+	// If we get 2 IPs, we're resolving the current pod's hostname,
+	// and none of the IPs are correct, so use FLY_PRIVATE_IP
+	if len(addrs) == 2 {
+		return os.Getenv("FLY_PRIVATE_IP"), nil
+	}
+
+	return addrs[0], nil
 }
 
 func getPodFQDN(svcName string) (string, error) {

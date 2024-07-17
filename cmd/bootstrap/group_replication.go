@@ -172,7 +172,7 @@ func updateGroupPeers(ctx context.Context, peers sets.Set[string]) error {
 			tmpSeeds = strings.Split(seeds, ",")
 		}
 		seedSet := sets.New(tmpSeeds...)
-		seedSet.Insert(fmt.Sprintf("%s:%d", fqdn, 3306))
+		seedSet.Insert(fmt.Sprintf("[%s]:%d", fqdn, 3306))
 
 		seeds = strings.Join(sets.List(seedSet), ",")
 
@@ -384,7 +384,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 
 	log.Printf("Cluster status:\n%s", status)
 
-	member, ok := status.DefaultReplicaSet.Topology[fmt.Sprintf("%s:%d", localShell.host, 3306)]
+	member, ok := status.DefaultReplicaSet.Topology[fmt.Sprintf("[%s]:%d", localShell.host, 3306)]
 	if !ok {
 		log.Printf("Adding instance (%s) to InnoDB cluster", localShell.host)
 

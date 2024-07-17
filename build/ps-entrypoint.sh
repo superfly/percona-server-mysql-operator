@@ -3,10 +3,8 @@ set -eo pipefail
 shopt -s nullglob
 set -o xtrace
 
-echo "Starting bootstrap server"
-/opt/percona/bootstrap &
-echo "Starting healthcheck server"
-/opt/percona/healthcheck &
+echo "Bootstrapping in 15 seconds..."
+(sleep 15 && /opt/percona/bootstrap) &
 
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
@@ -188,7 +186,7 @@ create_default_cnf() {
 }
 
 load_group_replication_plugin() {
-	POD_IP=$(hostname -I | awk '{print $1}')
+	POD_IP=$FLY_PRIVATE_IP
 
 	sed -i "/\[mysqld\]/a plugin_load_add=group_replication.so" $CFG
 	sed -i "/\[mysqld\]/a group_replication_exit_state_action=ABORT_SERVER" $CFG

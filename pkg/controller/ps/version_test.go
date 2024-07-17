@@ -564,7 +564,7 @@ func (vs *fakeVS) Start(t *testing.T) error {
 		return errors.Wrap(err, "failed to register gateway")
 	}
 	gwServer := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", vs.addr, vs.gwPort),
+		Addr:    fmt.Sprintf("[%s]:%d", vs.addr, vs.gwPort),
 		Handler: gwmux,
 	}
 	gwLis, err := net.Listen("tcp", gwServer.Addr)

@@ -159,7 +159,7 @@ func (d *DB) CloneInProgress(ctx context.Context) (bool, error) {
 }
 
 func (d *DB) Clone(ctx context.Context, donor, user, pass string, port int32) error {
-	_, err := d.db.ExecContext(ctx, "SET GLOBAL clone_valid_donor_list=?", fmt.Sprintf("%s:%d", donor, port))
+	_, err := d.db.ExecContext(ctx, "SET GLOBAL clone_valid_donor_list=?", fmt.Sprintf("[%s]:%d", donor, port))
 	if err != nil {
 		return errors.Wrap(err, "set clone_valid_donor_list")
 	}

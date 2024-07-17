@@ -91,7 +91,7 @@ func FQDN(cr *apiv1alpha1.PerconaServerMySQL, idx int) string {
 }
 
 func APIHost(cr *apiv1alpha1.PerconaServerMySQL) string {
-	return fmt.Sprintf("http://%s:%d", FQDN(cr, 0), defaultWebPort)
+	return fmt.Sprintf("http://[%s]:%d", FQDN(cr, 0), defaultWebPort)
 }
 
 // Labels returns labels of orchestrator
@@ -449,7 +449,7 @@ func RaftNodes(cr *apiv1alpha1.PerconaServerMySQL) []string {
 	nodes := make([]string, cr.Spec.Orchestrator.Size)
 
 	for i := 0; i < int(cr.Spec.Orchestrator.Size); i++ {
-		nodes[i] = fmt.Sprintf("%s:%d", FQDN(cr, i), 10008)
+		nodes[i] = fmt.Sprintf("[%s]:%d", FQDN(cr, i), 10008)
 	}
 
 	return nodes
