@@ -149,19 +149,20 @@ create_default_cnf() {
 	else
 		CLUSTER_NAME="$(hostname -f | cut -d'.' -f2)"
 		SERVER_NUM=${HOSTNAME/$CLUSTER_NAME-/}
-    HOSTNAME_HASH=$(echo -n "$HOSTNAME" | cksum | awk '{print $1}')
+    HOSTNAME_HASH=$(echo -n "$HOSTNAME" | cksum | awk '{print $1}' | cut -c1-8)
 		# SERVER_ID=${CLUSTER_HASH}${SERVER_NUM}
-    SERVER_ID=${CLUSTER_HASH}${HOSTNAME_HASH}
-    FQDN="${HOSTNAME}.${SERVICE_NAME}.$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+    SERVER_ID=${HOSTNAME_HASH}
+    # TODO: set FQDN using this Pod IP format: fdaa-0-47fb-a7b-4a-da7e-1ece-2.async-multinode-mysql-unready.mysql-async
+    DASHED_POD_IP=$(echo "$FLY_PRIVATE_IP" | sed 's/:/-/g')
+    FQDN="${DASHED_POD_IP}.${SERVICE_NAME_UNREADY}.$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)"
 	fi
 
 	echo '[mysqld]' >$CFG
 	sed -i "/\[mysqld\]/a read_only=ON" $CFG
 	sed -i "/\[mysqld\]/a server_id=${SERVER_ID}" $CFG
 	#sed -i "/\[mysqld\]/a admin-address=${POD_IP}" $CFG
-	#sed -i "/\[mysqld\]/a report_host=${FQDN}" $CFG
+	sed -i "/\[mysqld\]/a report_host=${FQDN}" $CFG
 	sed -i "/\[mysqld\]/a admin-address=${FLY_PRIVATE_IP}" $CFG
-	sed -i "/\[mysqld\]/a report_host=${FLY_PRIVATE_IP}" $CFG
 	sed -i "/\[mysqld\]/a report_port=3306" $CFG
 	sed -i "/\[mysqld\]/a gtid-mode=ON" $CFG
 	sed -i "/\[mysqld\]/a enforce-gtid-consistency=ON" $CFG

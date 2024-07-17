@@ -18,10 +18,11 @@ import (
 )
 
 func getFQDN(svcName string) (string, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "", errors.Wrap(err, "get hostname")
-	}
+	ip := os.Getenv("FLY_PRIVATE_IP")
+	hostname := strings.ReplaceAll(ip, ":", "-")
+	// if err != nil {
+	// 	return "", errors.Wrap(err, "get hostname")
+	// }
 
 	namespace, err := k8s.DefaultAPINamespace()
 	if err != nil {

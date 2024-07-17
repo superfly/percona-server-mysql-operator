@@ -53,7 +53,9 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 	}
 	log.Printf("Primary: %s Replicas: %v", primary, replicas)
 
-	fqdn, err := getFQDN(mysqlSvc)
+	// FKS: The mysql 'ready' service doesn't resolve currently, so we use the unready one
+	// fqdn, err := getFQDN(mysqlSvc)
+	fqdn, err := getFQDN(svc)
 	if err != nil {
 		return errors.Wrap(err, "get FQDN")
 	}
