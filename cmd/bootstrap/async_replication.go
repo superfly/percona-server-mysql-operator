@@ -30,7 +30,7 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 	}()
 
 	svc := os.Getenv("SERVICE_NAME_UNREADY")
-	mysqlSvc := os.Getenv("SERVICE_NAME")
+	// mysqlSvc := os.Getenv("SERVICE_NAME")
 	peers, err := lookup(svc)
 	if err != nil {
 		return errors.Wrap(err, "lookup")
