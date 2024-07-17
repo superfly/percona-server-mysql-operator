@@ -160,12 +160,12 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, tlsHash string) 
 					SchedulerName:                 spec.SchedulerName,
 					DNSPolicy:                     corev1.DNSClusterFirst,
 					Volumes: []corev1.Volume{
-						{
-							Name: apiv1alpha1.BinVolumeName,
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
-						},
+						// {
+						// 	Name: apiv1alpha1.BinVolumeName,
+						// 	VolumeSource: corev1.VolumeSource{
+						// 		EmptyDir: &corev1.EmptyDirVolumeSource{},
+						// 	},
+						// },
 						{
 							Name: credsVolumeName,
 							VolumeSource: corev1.VolumeSource{
@@ -230,7 +230,7 @@ func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		},
 		{
 			Name:  "MYSQL_SERVICE",
-			Value: mysql.ServiceName(cr),
+			Value: mysql.UnreadyServiceName(cr),
 		},
 		{
 			Name:  "RAFT_ENABLED",
@@ -296,7 +296,7 @@ func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 }
 
 func sidecarContainers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
-	serviceName := mysql.ServiceName(cr)
+	serviceName := mysql.UnreadyServiceName(cr)
 
 	return []corev1.Container{
 		{
@@ -314,9 +314,8 @@ func sidecarContainers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 				},
 			},
 			VolumeMounts: containerMounts(),
-			Command:      []string{"/opt/percona/orc-entrypoint.sh"},
+			Command:      []string{"/opt/percona/peer-list"},
 			Args: []string{
-				"/opt/percona/peer-list",
 				"-on-change=/usr/bin/add_mysql_nodes.sh",
 				"-service=$(MYSQL_SERVICE)",
 			},
@@ -330,10 +329,10 @@ func sidecarContainers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 
 func containerMounts() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
-		{
-			Name:      apiv1alpha1.BinVolumeName,
-			MountPath: apiv1alpha1.BinVolumePath,
-		},
+		// {
+		// 	Name:      apiv1alpha1.BinVolumeName,
+		// 	MountPath: apiv1alpha1.BinVolumePath,
+		// },
 		{
 			Name:      tlsVolumeName,
 			MountPath: tlsMountPath,

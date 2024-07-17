@@ -3,7 +3,8 @@
 set -e
 set -o xtrace
 
-/opt/percona-server-mysql-operator/ps-init-entrypoint.sh
+# FKS: binaries are copied to /opt/percona by Docker builds
+#/opt/percona-server-mysql-operator/ps-init-entrypoint.sh
 
 OPERATOR_BINDIR=/opt/percona
 ORC_CONF_PATH=${ORC_CONF_PATH:-/etc/orchestrator}
@@ -17,23 +18,25 @@ fi
 
 sleep 10 # give time for SRV records to update
 
-NAMESPACE=$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)
-jq -M ". + {
-        HTTPAdvertise:\"http://$HOSTNAME.$NAMESPACE:3000\",
-        RaftAdvertise:\"$HOSTNAME.$NAMESPACE\",
-        RaftBind:\"$HOSTNAME.$ORC_SERVICE.$NAMESPACE\",
-        RaftEnabled: ${RAFT_ENABLED:-"true"},
-        MySQLTopologyUseMutualTLS: true,
-        MySQLTopologySSLSkipVerify: true,
-        MySQLTopologySSLPrivateKeyFile:\"${ORC_CONF_PATH}/ssl/tls.key\",
-        MySQLTopologySSLCertFile:\"${ORC_CONF_PATH}/ssl/tls.crt\",
-        MySQLTopologySSLCAFile:\"${ORC_CONF_PATH}/ssl/ca.crt\",
-        RaftNodes:[]
-    }" "${ORC_CONF_FILE}" 1<>"${ORC_CONF_FILE}"
+cat $ORC_CONF_FILE
 
-if [ -f "${CUSTOM_CONF_FILE}" ]; then
-	jq -M -s ".[0] * .[1]" "${ORC_CONF_FILE}" "${CUSTOM_CONF_FILE}" 1<>"${ORC_CONF_FILE}"
-fi
+NAMESPACE=$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)
+# jq -M ". + {
+#         HTTPAdvertise:\"http://$HOSTNAME.$NAMESPACE:3000\",
+#         RaftAdvertise:\"$HOSTNAME.$NAMESPACE\",
+#         RaftBind:\"$HOSTNAME.$ORC_SERVICE.$NAMESPACE\",
+#         RaftEnabled: ${RAFT_ENABLED:-"true"},
+#         MySQLTopologyUseMutualTLS: true,
+#         MySQLTopologySSLSkipVerify: true,
+#         MySQLTopologySSLPrivateKeyFile:\"${ORC_CONF_PATH}/ssl/tls.key\",
+#         MySQLTopologySSLCertFile:\"${ORC_CONF_PATH}/ssl/tls.crt\",
+#         MySQLTopologySSLCAFile:\"${ORC_CONF_PATH}/ssl/ca.crt\",
+#         RaftNodes:[]
+#     }" "${ORC_CONF_FILE}" 1<>"${ORC_CONF_FILE}"
+
+# if [ -f "${CUSTOM_CONF_FILE}" ]; then
+# 	jq -M -s ".[0] * .[1]" "${ORC_CONF_FILE}" "${CUSTOM_CONF_FILE}" 1<>"${ORC_CONF_FILE}"
+# fi
 
 { set +x; } 2>/dev/null
 PATH_TO_SECRET="${ORC_CONF_PATH}/orchestrator-users-secret"
