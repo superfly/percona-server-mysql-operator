@@ -34,9 +34,9 @@ NAMESPACE=$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)
 #         RaftNodes:[]
 #     }" "${ORC_CONF_FILE}" 1<>"${ORC_CONF_FILE}"
 
-# if [ -f "${CUSTOM_CONF_FILE}" ]; then
-# 	jq -M -s ".[0] * .[1]" "${ORC_CONF_FILE}" "${CUSTOM_CONF_FILE}" 1<>"${ORC_CONF_FILE}"
-# fi
+if [ -f "${CUSTOM_CONF_FILE}" ]; then
+	jq -M -s ".[0] * .[1]" "${ORC_CONF_FILE}" "${CUSTOM_CONF_FILE}" 1<>"${ORC_CONF_FILE}"
+fi
 
 { set +x; } 2>/dev/null
 PATH_TO_SECRET="${ORC_CONF_PATH}/orchestrator-users-secret"
