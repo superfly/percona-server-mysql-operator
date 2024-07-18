@@ -66,6 +66,9 @@ spec:
     image: flyio/percona-server-mysql-operator:ps-orchestrator
     imagePullPolicy: Always
     size: 1
+    env:
+      - name: ORC_TOPOLOGY_PASSWORD
+        value: orchestrator_password
     affinity:
       antiAffinityTopologyKey: none
     resources:
