@@ -219,8 +219,7 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 	sidecars := sidecarContainers(cr)
 	containers := make([]corev1.Container, 1, len(sidecars)+1)
 	containers[0] = container(cr)
-	return containers
-	//return append(containers, sidecars...)
+	return append(containers, sidecars...)
 }
 
 func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
@@ -233,10 +232,11 @@ func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 			Name:  "MYSQL_SERVICE",
 			Value: mysql.UnreadyServiceName(cr),
 		},
-		{
-			Name:  "RAFT_ENABLED",
-			Value: "true",
-		},
+		// FKS: set via CRD to allwo disabling
+		// {
+		// 	Name:  "RAFT_ENABLED",
+		// 	Value: "false",
+		// },
 		{
 			Name:  "CLUSTER_NAME",
 			Value: cr.Name,
