@@ -5,4 +5,14 @@ IMAGE=flyio/percona-server-mysql-operator:js-fks
 docker tag perconalab/percona-server-mysql-operator:js-fks $IMAGE
 docker push $IMAGE
 
-cd mysql && ./build.sh && cd ../haproxy && ./build.sh && cd ../orchestrator && ./build.sh
+run() {
+    echo "Building $1"
+    local service=$1
+    cd $service && ./build.sh &
+}
+
+run mysql
+run haproxy
+run orchestrator
+
+wait

@@ -68,7 +68,9 @@ spec:
     size: 1
     env:
       - name: ORC_TOPOLOGY_PASSWORD
-        value: orchestrator_password
+        value: orchestrator
+      - name: RAFT_ENABLED
+        value: "false"
     affinity:
       antiAffinityTopologyKey: none
     resources:
@@ -86,6 +88,9 @@ spec:
     haproxy:
       enabled: true
       size: 1
+      env:
+        - name: CLUSTER_TYPE
+          value: async
       image: flyio/percona-server-mysql-operator:ps-haproxy
       imagePullPolicy: Always
       resources:

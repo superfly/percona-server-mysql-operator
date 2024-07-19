@@ -219,7 +219,8 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 	sidecars := sidecarContainers(cr)
 	containers := make([]corev1.Container, 1, len(sidecars)+1)
 	containers[0] = container(cr)
-	return append(containers, sidecars...)
+	return containers
+	//return append(containers, sidecars...)
 }
 
 func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
@@ -317,8 +318,8 @@ func sidecarContainers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 			Command:      []string{"/opt/percona/peer-list"},
 			Args: []string{
 				"-on-change=/usr/bin/add_mysql_nodes.sh",
-				"-service=$(MYSQL_SERVICE)",
-			},
+				// FKS: Env var substitution in args seems broken, so passing the value directly here
+				"-service=" + serviceName},
 			TerminationMessagePath:   "/dev/termination-log",
 			TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 			SecurityContext:          cr.Spec.Orchestrator.ContainerSecurityContext,

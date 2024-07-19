@@ -1,9 +1,9 @@
 apiVersion: ps.percona.com/v1alpha1
 kind: PerconaServerMySQLBackup
 metadata:
-  name: single-node-backup-2
+  name: backup1
   finalizers:
     - delete-backup
 spec:
-  clusterName: single-node-2
+  clusterName: async-multinode
   storageName: tigris
