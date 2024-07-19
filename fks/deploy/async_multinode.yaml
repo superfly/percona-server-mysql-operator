@@ -67,6 +67,7 @@ spec:
     imagePullPolicy: Always
     size: 1
     env:
+      # Topology user password is not written correctly to the filesystem so we specify here for now
       - name: ORC_TOPOLOGY_PASSWORD
         value: orchestrator
       - name: RAFT_ENABLED
