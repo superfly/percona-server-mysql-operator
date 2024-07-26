@@ -12,7 +12,7 @@ pmm_args+=(
 if [[ $DB_TYPE != "haproxy" ]]; then
 	pmm_args+=(
 		--service-name="$PMM_AGENT_SETUP_NODE_NAME"
-		--host="$POD_NAME"
+		--host="$FLY_PRIVATE_IP"
 		--port="$DB_PORT"
 	)
 fi
