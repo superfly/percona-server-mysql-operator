@@ -462,7 +462,8 @@ func PodService(cr *apiv1alpha1.PerconaServerMySQL, t corev1.ServiceType, podNam
 }
 
 func containers(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret) []corev1.Container {
-	containers := []corev1.Container{mysqldContainer(cr)}
+	mysqlContainer := mysqldContainer(cr)
+	containers := []corev1.Container{mysqlContainer}
 
 	if backup := cr.Spec.Backup; backup != nil && backup.Enabled {
 		containers = append(containers, backupContainer(cr))
@@ -475,6 +476,9 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret) []cor
 	if cr.PMMEnabled(secret) {
 		containers = append(containers, pmm.Container(cr, secret, ComponentName))
 	}
+
+	// FKS: Run healthcheck sidecar HTTP server for readiness and liveness probes
+	containers = append(containers, healthcheckContainer(cr, mysqlContainer.Env))
 
 	return appendUniqueContainers(containers, cr.Spec.MySQL.Sidecars...)
 }
@@ -523,11 +527,10 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		Env:             env,
 		EnvFrom:         spec.EnvFrom,
 		VolumeMounts: []corev1.VolumeMount{
-			// FKS: Link scripts in the Docker build instead of mounting them, since we don't support EmptyDir yet.
-			// {
-			// 	Name:      apiv1alpha1.BinVolumeName,
-			// 	MountPath: apiv1alpha1.BinVolumePath,
-			// },
+			{
+				Name:      apiv1alpha1.BinVolumeName,
+				MountPath: apiv1alpha1.BinVolumePath,
+			},
 			{
 				Name:      DataVolumeName,
 				MountPath: DataMountPath,
@@ -556,13 +559,12 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 		SecurityContext:          spec.ContainerSecurityContext,
 
-		// FKS: Probes not supported yet. Ignored.
-		LivenessProbe:  k8s.ExecProbe(spec.LivenessProbe, []string{"/opt/percona/healthcheck", "liveness"}),
-		ReadinessProbe: k8s.ExecProbe(spec.ReadinessProbe, []string{"/opt/percona/healthcheck", "readiness"}),
-		StartupProbe:   k8s.ExecProbe(spec.StartupProbe, []string{"/opt/percona/bootstrap"}),
+		ReadinessProbe: k8s.HTTPCheckProbe(spec.ReadinessProbe, "/readiness", 5500),
+		// FKS: Startup and Liveness Probes not supported yet. Ignored.
+		StartupProbe:  k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 5500),
+		LivenessProbe: k8s.HTTPCheckProbe(spec.LivenessProbe, "/liveness", 5500),
 
 		// FKS: Lifecycle not supported yet. Ignored.
-
 		Lifecycle: &corev1.Lifecycle{
 			PreStop: &corev1.LifecycleHandler{
 				Exec: &corev1.ExecAction{
@@ -573,6 +575,32 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 	}
 
 	return container
+}
+
+func healthcheckContainer(cr *apiv1alpha1.PerconaServerMySQL, env []corev1.EnvVar) corev1.Container {
+	return corev1.Container{
+		Name:            "xtrabackup",
+		Image:           cr.Spec.MySQL.Image,
+		ImagePullPolicy: cr.Spec.MySQL.ImagePullPolicy,
+		Resources:       cr.Spec.MySQL.Resources,
+		Env:             env,
+		Ports: []corev1.ContainerPort{
+			{
+				Name:          "http",
+				ContainerPort: 5500,
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      credsVolumeName,
+				MountPath: CredsMountPath,
+			},
+		},
+		Command:                  []string{"/opt/percona/healthcheck_http"},
+		TerminationMessagePath:   "/dev/termination-log",
+		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
+		SecurityContext:          cr.Spec.MySQL.ContainerSecurityContext,
+	}
 }
 
 func backupContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
@@ -589,11 +617,10 @@ func backupContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			// FKS: Link scripts in the Docker build instead of mounting them, since we don't support EmptyDir yet.
-			// {
-			// 	Name:      apiv1alpha1.BinVolumeName,
-			// 	MountPath: apiv1alpha1.BinVolumePath,
-			// },
+			{
+				Name:      apiv1alpha1.BinVolumeName,
+				MountPath: apiv1alpha1.BinVolumePath,
+			},
 			{
 				Name:      DataVolumeName,
 				MountPath: DataMountPath,
@@ -631,11 +658,10 @@ func heartbeatContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		},
 		Ports: []corev1.ContainerPort{},
 		VolumeMounts: []corev1.VolumeMount{
-			// FKS: Link scripts in the Docker build instead of mounting them, since we don't support EmptyDir yet.
-			// {
-			// 	Name:      apiv1alpha1.BinVolumeName,
-			// 	MountPath: apiv1alpha1.BinVolumePath,
-			// },
+			{
+				Name:      apiv1alpha1.BinVolumeName,
+				MountPath: apiv1alpha1.BinVolumePath,
+			},
 			{
 				Name:      DataVolumeName,
 				MountPath: DataMountPath,
