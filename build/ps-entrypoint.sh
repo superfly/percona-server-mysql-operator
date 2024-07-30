@@ -143,27 +143,23 @@ TLS_DIR=/etc/mysql/mysql-tls-secret
 CUSTOM_CONFIG_FILES=("/etc/mysql/config/auto-config.cnf" "/etc/mysql/config/my-config.cnf" "/etc/mysql/config/my-secret.cnf")
 
 create_default_cnf() {
-	POD_IP=$(hostname -I | awk '{print $1}')
+  # FKS - host has two IPv4 and IPv6, and only the last one is reachable and has services bound to it
+	POD_IP=$(hostname -I | awk '{print $4}')
 
 	if [[ ${HOSTNAME} =~ "-xb-" ]]; then
 		FQDN=${HOSTNAME}
 	else
 		CLUSTER_NAME="$(hostname -f | cut -d'.' -f2)"
 		SERVER_NUM=${HOSTNAME/$CLUSTER_NAME-/}
-    HOSTNAME_HASH=$(echo -n "$HOSTNAME" | cksum | awk '{print $1}' | cut -c1-8)
-		# SERVER_ID=${CLUSTER_HASH}${SERVER_NUM}
-    SERVER_ID=${HOSTNAME_HASH}
-    # TODO: set FQDN using this Pod IP format: fdaa-0-47fb-a7b-4a-da7e-1ece-2.async-multinode-mysql-unready.mysql-async
-    DASHED_POD_IP=$(echo "$FLY_PRIVATE_IP" | sed 's/:/-/g')
-    FQDN="${DASHED_POD_IP}.${SERVICE_NAME_UNREADY}.$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+		SERVER_ID=${CLUSTER_HASH}${SERVER_NUM}
+		FQDN="${HOSTNAME}.${SERVICE_NAME}.$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)"
 	fi
 
 	echo '[mysqld]' >$CFG
 	sed -i "/\[mysqld\]/a read_only=ON" $CFG
 	sed -i "/\[mysqld\]/a server_id=${SERVER_ID}" $CFG
-	#sed -i "/\[mysqld\]/a admin-address=${POD_IP}" $CFG
+	sed -i "/\[mysqld\]/a admin-address=${POD_IP}" $CFG
 	sed -i "/\[mysqld\]/a report_host=${FQDN}" $CFG
-	sed -i "/\[mysqld\]/a admin-address=${FLY_PRIVATE_IP}" $CFG
 	sed -i "/\[mysqld\]/a report_port=3306" $CFG
 	sed -i "/\[mysqld\]/a gtid-mode=ON" $CFG
 	sed -i "/\[mysqld\]/a enforce-gtid-consistency=ON" $CFG
@@ -188,7 +184,7 @@ create_default_cnf() {
 }
 
 load_group_replication_plugin() {
-	POD_IP=$FLY_PRIVATE_IP
+	POD_IP=$(hostname -I | awk '{print $1}')
 
 	sed -i "/\[mysqld\]/a plugin_load_add=group_replication.so" $CFG
 	sed -i "/\[mysqld\]/a group_replication_exit_state_action=ABORT_SERVER" $CFG
