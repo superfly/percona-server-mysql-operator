@@ -5,8 +5,7 @@ set -o xtrace
 
 echo "Bootstrapping in 15 seconds..."
 (sleep 15 && /opt/percona/bootstrap) &
-# TODO: use hostname to determine sleep period to stagger bootstrapping
-# =async-multinode3-mysql-0
+
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
 	set -- mysqld "$@"

@@ -3,15 +3,6 @@
 set -e
 set -o xtrace
 
-if [ $1 = 'orchestrator' ]; then
-    echo "Starting orchestrator"
-    /opt/percona/orchestrator -config /etc/orchestrator/orchestrator.conf.json http
-    exit $?
-fi
-
-# FKS: binaries are copied to /opt/percona by Docker builds
-#/opt/percona-server-mysql-operator/ps-init-entrypoint.sh
-
 OPERATOR_BINDIR=/opt/percona
 ORC_CONF_PATH=${ORC_CONF_PATH:-/etc/orchestrator}
 ORC_CONF_FILE=${ORC_CONF_FILE:-"${ORC_CONF_PATH}/orchestrator.conf.json"}
@@ -23,8 +14,6 @@ if [ -f ${OPERATOR_BINDIR}/orchestrator.conf.json ]; then
 fi
 
 sleep 10 # give time for SRV records to update
-
-cat $ORC_CONF_FILE
 
 NAMESPACE=$(</var/run/secrets/kubernetes.io/serviceaccount/namespace)
 jq -M ". + {
@@ -43,8 +32,6 @@ jq -M ". + {
 if [ -f "${CUSTOM_CONF_FILE}" ]; then
 	jq -M -s ".[0] * .[1]" "${ORC_CONF_FILE}" "${CUSTOM_CONF_FILE}" 1<>"${ORC_CONF_FILE}"
 fi
-
-cat $ORC_CONF_FILE
 
 { set +x; } 2>/dev/null
 PATH_TO_SECRET="${ORC_CONF_PATH}/orchestrator-users-secret"
