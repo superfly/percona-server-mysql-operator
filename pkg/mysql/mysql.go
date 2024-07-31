@@ -579,7 +579,7 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 
 func healthcheckContainer(cr *apiv1alpha1.PerconaServerMySQL, env []corev1.EnvVar) corev1.Container {
 	return corev1.Container{
-		Name:            "xtrabackup",
+		Name:            "healthcheck",
 		Image:           cr.Spec.MySQL.Image,
 		ImagePullPolicy: cr.Spec.MySQL.ImagePullPolicy,
 		Resources:       cr.Spec.MySQL.Resources,
