@@ -184,7 +184,7 @@ create_default_cnf() {
 }
 
 load_group_replication_plugin() {
-	POD_IP=$(hostname -I | awk '{print $1}')
+	POD_IP=$(hostname -I | awk '{print $4}')
 
 	sed -i "/\[mysqld\]/a plugin_load_add=group_replication.so" $CFG
 	sed -i "/\[mysqld\]/a group_replication_exit_state_action=ABORT_SERVER" $CFG
