@@ -48,6 +48,15 @@ func pmmEnvs(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret, dbType s
 				},
 			},
 		},
+		// FKS: Set the pod IP which should be used in place of the name, which resolves to an unreachable IP
+		{
+			Name: "POD_IP",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.podIP",
+				},
+			},
+		},
 		{
 			Name: "POD_NAMESPACE",
 			ValueFrom: &corev1.EnvVarSource{
