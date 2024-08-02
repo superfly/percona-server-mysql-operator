@@ -9,7 +9,14 @@ import (
 
 func commandHandler(arg string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cmd := exec.Command("/opt/percona/healthcheck", arg)
+
+		var cmd *exec.Cmd
+		cmd = exec.Command("/opt/percona/healthcheck", arg)
+
+		if arg == "startup" {
+			cmd = exec.Command("/opt/percona/bootstrap")
+		}
+
 		err := cmd.Run()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -22,7 +29,7 @@ func commandHandler(arg string) http.HandlerFunc {
 }
 
 func main() {
-	pathsAndArgs := []string{"readiness", "liveness"}
+	pathsAndArgs := []string{"readiness", "liveness", "startup"}
 
 	for _, arg := range pathsAndArgs {
 		http.HandleFunc("/"+arg, commandHandler(arg))
