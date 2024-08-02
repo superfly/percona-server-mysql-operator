@@ -29,8 +29,9 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 		log.Printf("bootstrap finished in %f seconds", timer.ElapsedSeconds("total"))
 	}()
 
+	svc := os.Getenv("SERVICE_NAME_UNREADY")
 	mysqlSvc := os.Getenv("SERVICE_NAME")
-	peers, err := lookup(mysqlSvc)
+	peers, err := lookup(svc)
 
 	if err != nil {
 		return errors.Wrap(err, "lookup")
