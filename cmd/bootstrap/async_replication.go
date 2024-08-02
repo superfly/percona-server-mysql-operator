@@ -29,9 +29,9 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 		log.Printf("bootstrap finished in %f seconds", timer.ElapsedSeconds("total"))
 	}()
 
-	svc := os.Getenv("SERVICE_NAME_UNREADY")
-	// mysqlSvc := os.Getenv("SERVICE_NAME")
-	peers, err := lookup(svc)
+	mysqlSvc := os.Getenv("SERVICE_NAME")
+	peers, err := lookup(mysqlSvc)
+
 	if err != nil {
 		return errors.Wrap(err, "lookup")
 	}
@@ -53,9 +53,7 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 	}
 	log.Printf("Primary: %s Replicas: %v", primary, replicas)
 
-	// FKS: The mysql 'ready' service doesn't resolve currently, so we use the unready one
-	// fqdn, err := getFQDN(mysqlSvc)
-	fqdn, err := getFQDN(svc)
+	fqdn, err := getFQDN(mysqlSvc)
 	if err != nil {
 		return errors.Wrap(err, "get FQDN")
 	}
