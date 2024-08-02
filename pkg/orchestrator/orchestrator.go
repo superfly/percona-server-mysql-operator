@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	apiv1alpha1 "github.com/percona/percona-server-mysql-operator/api/v1alpha1"
+	"github.com/percona/percona-server-mysql-operator/pkg/k8s"
 	"github.com/percona/percona-server-mysql-operator/pkg/mysql"
 	"github.com/percona/percona-server-mysql-operator/pkg/naming"
 	"github.com/percona/percona-server-mysql-operator/pkg/util"
@@ -138,14 +139,14 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, tlsHash string) 
 					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
-					// InitContainers: []corev1.Container{
-					// 	k8s.InitContainer(
-					// 		ComponentName,
-					// 		initImage,
-					// 		spec.ImagePullPolicy,
-					// 		spec.ContainerSecurityContext,
-					// 	),
-					// },
+					InitContainers: []corev1.Container{
+						k8s.InitContainer(
+							ComponentName,
+							initImage,
+							spec.ImagePullPolicy,
+							spec.ContainerSecurityContext,
+						),
+					},
 					NodeSelector:                  cr.Spec.Orchestrator.NodeSelector,
 					Tolerations:                   cr.Spec.Orchestrator.Tolerations,
 					Containers:                    containers(cr),
@@ -160,12 +161,12 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, tlsHash string) 
 					SchedulerName:                 spec.SchedulerName,
 					DNSPolicy:                     corev1.DNSClusterFirst,
 					Volumes: []corev1.Volume{
-						// {
-						// 	Name: apiv1alpha1.BinVolumeName,
-						// 	VolumeSource: corev1.VolumeSource{
-						// 		EmptyDir: &corev1.EmptyDirVolumeSource{},
-						// 	},
-						// },
+						{
+							Name: apiv1alpha1.BinVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
 						{
 							Name: credsVolumeName,
 							VolumeSource: corev1.VolumeSource{
@@ -230,9 +231,9 @@ func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		},
 		{
 			Name:  "MYSQL_SERVICE",
-			Value: mysql.UnreadyServiceName(cr),
+			Value: mysql.ServiceName(cr),
 		},
-		// FKS: set via CRD to allwo disabling
+		// FKS: set RAFT_ENABLED via the CRD to allow disabling
 		// {
 		// 	Name:  "RAFT_ENABLED",
 		// 	Value: "false",
@@ -315,10 +316,11 @@ func sidecarContainers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 				},
 			},
 			VolumeMounts: containerMounts(),
-			Command:      []string{"/opt/percona/peer-list"},
+			// FKS run peer-list directly, since running it via the entrypoint script caused conflicts with the main container
+			Command: []string{"/opt/percona/peer-list"},
 			Args: []string{
 				"-on-change=/usr/bin/add_mysql_nodes.sh",
-				// FKS: Env var substitution in args seems broken, so passing the value directly here
+				// FKS: Env var substitution in args isn't supported, so we pass the service name directly
 				"-service=" + serviceName},
 			TerminationMessagePath:   "/dev/termination-log",
 			TerminationMessagePolicy: corev1.TerminationMessageReadFile,
@@ -330,10 +332,10 @@ func sidecarContainers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 
 func containerMounts() []corev1.VolumeMount {
 	return []corev1.VolumeMount{
-		// {
-		// 	Name:      apiv1alpha1.BinVolumeName,
-		// 	MountPath: apiv1alpha1.BinVolumePath,
-		// },
+		{
+			Name:      apiv1alpha1.BinVolumeName,
+			MountPath: apiv1alpha1.BinVolumePath,
+		},
 		{
 			Name:      tlsVolumeName,
 			MountPath: tlsMountPath,

@@ -99,14 +99,14 @@ func Job(
 					RestartPolicy:         corev1.RestartPolicyNever,
 					ShareProcessNamespace: &t,
 					SetHostnameAsFQDN:     &t,
-					// InitContainers: []corev1.Container{
-					// 	k8s.InitContainer(
-					// 		componentName,
-					// 		initImage,
-					// 		cluster.Spec.Backup.ImagePullPolicy,
-					// 		storage.ContainerSecurityContext,
-					// 	),
-					// },
+					InitContainers: []corev1.Container{
+						k8s.InitContainer(
+							componentName,
+							initImage,
+							cluster.Spec.Backup.ImagePullPolicy,
+							storage.ContainerSecurityContext,
+						),
+					},
 					Containers: []corev1.Container{
 						xtrabackupContainer(cluster, cr.Name, destination, storage),
 					},
@@ -120,18 +120,18 @@ func Job(
 					RuntimeClassName:          storage.RuntimeClassName,
 					DNSPolicy:                 corev1.DNSClusterFirst,
 					Volumes: []corev1.Volume{
-						// {
-						// 	Name: apiv1alpha1.BinVolumeName,
-						// 	VolumeSource: corev1.VolumeSource{
-						// 		EmptyDir: &corev1.EmptyDirVolumeSource{},
-						// 	},
-						// },
-						// {
-						// 	Name: dataVolumeName,
-						// 	VolumeSource: corev1.VolumeSource{
-						// 		EmptyDir: &corev1.EmptyDirVolumeSource{},
-						// 	},
-						// },
+						{
+							Name: apiv1alpha1.BinVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
+						{
+							Name: dataVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
 						{
 							Name: credsVolumeName,
 							VolumeSource: corev1.VolumeSource{
@@ -182,14 +182,14 @@ func xtrabackupContainer(cluster *apiv1alpha1.PerconaServerMySQL, backupName str
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			// {
-			// 	Name:      apiv1alpha1.BinVolumeName,
-			// 	MountPath: apiv1alpha1.BinVolumePath,
-			// },
-			// {
-			// 	Name:      dataVolumeName,
-			// 	MountPath: dataMountPath,
-			// },
+			{
+				Name:      apiv1alpha1.BinVolumeName,
+				MountPath: apiv1alpha1.BinVolumePath,
+			},
+			{
+				Name:      dataVolumeName,
+				MountPath: dataMountPath,
+			},
 			{
 				Name:      tlsVolumeName,
 				MountPath: tlsMountPath,
@@ -272,12 +272,12 @@ func deleteContainer(image string, conf *BackupConfig, storage *apiv1alpha1.Back
 		Name:            componentName,
 		Image:           image,
 		ImagePullPolicy: corev1.PullNever,
-		// VolumeMounts: []corev1.VolumeMount{
-		// 	{
-		// 		Name:      apiv1alpha1.BinVolumeName,
-		// 		MountPath: apiv1alpha1.BinVolumePath,
-		// 	},
-		// },
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      apiv1alpha1.BinVolumeName,
+				MountPath: apiv1alpha1.BinVolumePath,
+			},
+		},
 		Command:                  append([]string{"xbcloud"}, XBCloudArgs(XBCloudActionDelete, conf)...),
 		TerminationMessagePath:   "/dev/termination-log",
 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
@@ -318,35 +318,35 @@ func RestoreJob(
 				},
 				Spec: corev1.PodSpec{
 					RestartPolicy: corev1.RestartPolicyNever,
-					// InitContainers: []corev1.Container{
-					// 	{
-					// 		Name:            componentName + "-init",
-					// 		Image:           initImage,
-					// 		ImagePullPolicy: cluster.Spec.Backup.ImagePullPolicy,
-					// 		VolumeMounts: []corev1.VolumeMount{
-					// 			{
-					// 				Name:      apiv1alpha1.BinVolumeName,
-					// 				MountPath: apiv1alpha1.BinVolumePath,
-					// 			},
-					// 			{
-					// 				Name:      dataVolumeName,
-					// 				MountPath: dataMountPath,
-					// 			},
-					// 			{
-					// 				Name:      credsVolumeName,
-					// 				MountPath: credsMountPath,
-					// 			},
-					// 			{
-					// 				Name:      tlsVolumeName,
-					// 				MountPath: tlsMountPath,
-					// 			},
-					// 		},
-					// 		Command:                  []string{"/opt/percona-server-mysql-operator/ps-init-entrypoint.sh"},
-					// 		TerminationMessagePath:   "/dev/termination-log",
-					// 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
-					// 		SecurityContext:          storage.ContainerSecurityContext,
-					// 	},
-					// },
+					InitContainers: []corev1.Container{
+						{
+							Name:            componentName + "-init",
+							Image:           initImage,
+							ImagePullPolicy: cluster.Spec.Backup.ImagePullPolicy,
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      apiv1alpha1.BinVolumeName,
+									MountPath: apiv1alpha1.BinVolumePath,
+								},
+								{
+									Name:      dataVolumeName,
+									MountPath: dataMountPath,
+								},
+								{
+									Name:      credsVolumeName,
+									MountPath: credsMountPath,
+								},
+								{
+									Name:      tlsVolumeName,
+									MountPath: tlsMountPath,
+								},
+							},
+							Command:                  []string{"/opt/percona-server-mysql-operator/ps-init-entrypoint.sh"},
+							TerminationMessagePath:   "/dev/termination-log",
+							TerminationMessagePolicy: corev1.TerminationMessageReadFile,
+							SecurityContext:          storage.ContainerSecurityContext,
+						},
+					},
 					Containers: []corev1.Container{
 						restoreContainer(cluster, restore, destination, storage),
 					},
@@ -360,12 +360,12 @@ func RestoreJob(
 					DNSPolicy:                 corev1.DNSClusterFirst,
 					SecurityContext:           storage.PodSecurityContext,
 					Volumes: []corev1.Volume{
-						// {
-						// 	Name: apiv1alpha1.BinVolumeName,
-						// 	VolumeSource: corev1.VolumeSource{
-						// 		EmptyDir: &corev1.EmptyDirVolumeSource{},
-						// 	},
-						// },
+						{
+							Name: apiv1alpha1.BinVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
 						{
 							Name: dataVolumeName,
 							VolumeSource: corev1.VolumeSource{
@@ -439,14 +439,14 @@ func GetDeleteJob(cr *apiv1alpha1.PerconaServerMySQLBackup, conf *BackupConfig) 
 					PriorityClassName:         storage.PriorityClassName,
 					RuntimeClassName:          storage.RuntimeClassName,
 					DNSPolicy:                 corev1.DNSClusterFirst,
-					// Volumes: []corev1.Volume{
-					// 	{
-					// 		Name: apiv1alpha1.BinVolumeName,
-					// 		VolumeSource: corev1.VolumeSource{
-					// 			EmptyDir: &corev1.EmptyDirVolumeSource{},
-					// 		},
-					// 	},
-					// },
+					Volumes: []corev1.Volume{
+						{
+							Name: apiv1alpha1.BinVolumeName,
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -480,10 +480,10 @@ func restoreContainer(cluster *apiv1alpha1.PerconaServerMySQL, restore *apiv1alp
 			},
 		},
 		VolumeMounts: []corev1.VolumeMount{
-			// {
-			// 	Name:      apiv1alpha1.BinVolumeName,
-			// 	MountPath: apiv1alpha1.BinVolumePath,
-			// },
+			{
+				Name:      apiv1alpha1.BinVolumeName,
+				MountPath: apiv1alpha1.BinVolumePath,
+			},
 			{
 				Name:      dataVolumeName,
 				MountPath: dataMountPath,

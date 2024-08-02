@@ -22,9 +22,10 @@ func Container(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret, dbType
 		ImagePullPolicy: pmmSpec.ImagePullPolicy,
 		SecurityContext: pmmSpec.ContainerSecurityContext,
 		Ports:           ports,
-		Command:         []string{"/usr/local/percona/pmm2/bin/pmm-agent-entrypoint"},
-		Resources:       pmmSpec.Resources,
-		Env:             envs,
+		// FKS: Set the pmm entrypoint since our combined main image has its own entrypoint
+		Command:   []string{"/usr/local/percona/pmm2/bin/pmm-agent-entrypoint"},
+		Resources: pmmSpec.Resources,
+		Env:       envs,
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      apiv1alpha1.BinVolumeName,

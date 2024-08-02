@@ -38,7 +38,6 @@ func InitContainer(component, image string, pullPolicy corev1.PullPolicy, secCtx
 // It returns component specific init image if it's defined, else it return top level init image.
 // If there is no init image defined in the CR, it returns the current running operator image.
 func InitImage(ctx context.Context, cl client.Reader, cr *apiv1alpha1.PerconaServerMySQL, comp ComponentWithInit) (string, error) {
-	return "", nil
 	if image := comp.GetInitImage(); len(image) > 0 {
 		return image, nil
 	}

@@ -157,15 +157,14 @@ func StatefulSet(cr *apiv1alpha1.PerconaServerMySQL, initImage, configHash, tlsH
 					Annotations: annotations,
 				},
 				Spec: corev1.PodSpec{
-					// FKS: InitContainers are not supported, but here the initContainer is only used to copy scripts, which is done in the Docker build.
-					// InitContainers: []corev1.Container{
-					// 	k8s.InitContainer(
-					// 		ComponentName,
-					// 		initImage,
-					// 		spec.ImagePullPolicy,
-					// 		spec.ContainerSecurityContext,
-					// 	),
-					// },
+					InitContainers: []corev1.Container{
+						k8s.InitContainer(
+							ComponentName,
+							initImage,
+							spec.ImagePullPolicy,
+							spec.ContainerSecurityContext,
+						),
+					},
 					Containers:                    containers(cr, secret),
 					ServiceAccountName:            cr.Spec.MySQL.ServiceAccountName,
 					NodeSelector:                  cr.Spec.MySQL.NodeSelector,
@@ -368,7 +367,7 @@ func UnreadyService(cr *apiv1alpha1.PerconaServerMySQL) *corev1.Service {
 			ClusterIP:                "None",
 			Ports:                    servicePorts(cr),
 			Selector:                 labels,
-			PublishNotReadyAddresses: true,
+			PublishNotReadyAddresses: false,
 		},
 	}
 }
@@ -560,8 +559,8 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		SecurityContext:          spec.ContainerSecurityContext,
 
 		ReadinessProbe: k8s.HTTPCheckProbe(spec.ReadinessProbe, "/readiness", 5500),
-		// FKS: Startup and Liveness Probes not supported yet. Ignored.
-		StartupProbe:  k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 5500),
+		StartupProbe:   k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 5500),
+		// FKS: Liveness Probes not supported yet. Ignored.
 		LivenessProbe: k8s.HTTPCheckProbe(spec.LivenessProbe, "/liveness", 5500),
 
 		// FKS: Lifecycle not supported yet. Ignored.
@@ -577,6 +576,7 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 	return container
 }
 
+// FKS: Add healthcheck sidecar container to replace exec probes for readiness, liveness and startup probes
 func healthcheckContainer(cr *apiv1alpha1.PerconaServerMySQL, env []corev1.EnvVar) corev1.Container {
 	return corev1.Container{
 		Name:            "healthcheck",
