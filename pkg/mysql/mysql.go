@@ -559,10 +559,10 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 		SecurityContext:          spec.ContainerSecurityContext,
 
+		// FKS: Liveness startup probes not supported yet. Readiness is supported via HTTP only.
+		// The bootstrap container will be used for cluster bootstrap instead of a startup probe.
+		// HTTP-based liveness will be implemented soon in FKS.
 		ReadinessProbe: k8s.HTTPCheckProbe(spec.ReadinessProbe, "/readiness", 5500),
-		StartupProbe:   k8s.HTTPCheckProbe(spec.StartupProbe, "/startup", 5500),
-		// FKS: Liveness Probes not supported yet. Ignored.
-		LivenessProbe: k8s.HTTPCheckProbe(spec.LivenessProbe, "/liveness", 5500),
 
 		// FKS: Lifecycle not supported yet. Ignored.
 		Lifecycle: &corev1.Lifecycle{
