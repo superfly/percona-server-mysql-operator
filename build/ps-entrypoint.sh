@@ -3,9 +3,6 @@ set -eo pipefail
 shopt -s nullglob
 set -o xtrace
 
-echo "Bootstrapping in 15 seconds..."
-(sleep 15 && /opt/percona/bootstrap) &
-
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
 	set -- mysqld "$@"
