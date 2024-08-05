@@ -233,11 +233,17 @@ func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 			Name:  "MYSQL_SERVICE",
 			Value: mysql.ServiceName(cr),
 		},
-		// FKS: set RAFT_ENABLED via the CRD to allow disabling
-		// {
-		// 	Name:  "RAFT_ENABLED",
-		// 	Value: "false",
-		// },
+		{
+			Name: "ORC_TOPOLOGY_PASSWORD",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "orchestrator",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: cr.InternalSecretName(),
+					},
+				},
+			},
+		},
 		{
 			Name:  "CLUSTER_NAME",
 			Value: cr.Name,
