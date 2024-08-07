@@ -42,6 +42,10 @@ func getSecret(username apiv1alpha1.SystemUser) (string, error) {
 	return strings.TrimSpace(string(sBytes)), nil
 }
 
+func getFlyPodIP() (string, error) {
+	return os.Getenv("FLY_PRIVATE_IP"), nil
+}
+
 func getPodIP(hostname string) (string, error) {
 	addrs, err := net.LookupHost(hostname)
 	if err != nil {

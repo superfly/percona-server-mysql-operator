@@ -304,7 +304,7 @@ func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 }
 
 func sidecarContainers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
-	serviceName := mysql.UnreadyServiceName(cr)
+	serviceName := mysql.ServiceName(cr)
 
 	return []corev1.Container{
 		{

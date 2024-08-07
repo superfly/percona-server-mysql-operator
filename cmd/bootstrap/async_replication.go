@@ -60,12 +60,12 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 	}
 	log.Printf("FQDN: %s", fqdn)
 
-	podHostname, err := os.Hostname()
-	if err != nil {
-		return errors.Wrap(err, "get hostname")
-	}
-
-	podIp, err := getPodIP(podHostname)
+	// podHostname, err := os.Hostname()
+	// if err != nil {
+	// 	return errors.Wrap(err, "get hostname")
+	// }
+	// FKS: resolving the hostname on localhost returns none of the correct IPs, so we use FLY_PRIVATE_IP
+	podIp, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}

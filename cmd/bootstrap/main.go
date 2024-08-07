@@ -44,8 +44,8 @@ func main() {
 
 	if !recovering {
 
-		log.Printf("bootstrap sleeping for 30 seconds to allow the mysql server to start, SRV records to populate and other members to boot")
-		time.Sleep(30 * time.Second)
+		log.Printf("bootstrap sleeping for 15 seconds to allow the mysql server to start, SRV records to populate and other members to boot")
+		time.Sleep(15 * time.Second)
 
 		os.Remove(bootstrapFile)
 
@@ -60,6 +60,7 @@ func main() {
 			if err := bootstrapAsyncReplication(context.Background()); err != nil {
 				log.Fatalf("bootstrap failed: %v", err)
 			}
+			touchBootstrap()
 		default:
 			log.Fatalf("bootstrap invalid cluster type: %v", clusterType)
 		}
