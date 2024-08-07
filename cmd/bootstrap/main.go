@@ -4,10 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
-	"path/filepath"
 	"time"
-
-	"github.com/percona/percona-server-mysql-operator/pkg/mysql"
 )
 
 const (
@@ -17,12 +14,14 @@ const (
 
 func main() {
 
-	f, err := os.OpenFile(filepath.Join(mysql.DataMountPath, "bootstrap.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	defer f.Close()
-	log.SetOutput(f)
+	// f, err := os.OpenFile(filepath.Join(mysql.DataMountPath, "bootstrap.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	// if err != nil {
+	// 	log.Fatalf("error opening file: %v", err)
+	// }
+	// defer f.Close()
+
+	// FKS: Keep logs in stdout so we can understand why the container crashes
+	// log.SetOutput(f)
 
 	var recovering bool
 
@@ -40,11 +39,8 @@ func main() {
 
 	if !recovering {
 
-		// sleep for 15 seconds to allow the mysql server to start and SRV records to populate
-
-		log.Printf("Sleeping for 15 seconds to allow the mysql server to start and SRV records to populate")
-
-		time.Sleep(15 * time.Second)
+		log.Printf("Sleeping for 30 seconds to allow the mysql server to start and SRV records to populate")
+		time.Sleep(30 * time.Second)
 
 		log.Printf("Starting bootstrap")
 		clusterType := os.Getenv("CLUSTER_TYPE")
@@ -64,6 +60,8 @@ func main() {
 
 	// FKS: Since we run bootstrap as a sidecar instead of a startup probe,
 	//      keep the bootstrap container running to avoid the pod being restarted.
-	select {}
-
+	for {
+		log.Printf("Bootstrap sleeping for 1 hour")
+		time.Sleep(1 * time.Hour)
+	}
 }

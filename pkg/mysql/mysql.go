@@ -478,7 +478,12 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret) []cor
 
 	// FKS: Run healthcheck sidecar HTTP server for readiness and liveness probes,
 	//      and a bootstrap sidecar for cluster bootstrap instead of running as a startup probe (unsupported by FKS)
-	containers = append(containers, healthcheckContainer(cr, mysqlContainer.Env), healthcheckContainer(cr, mysqlContainer.Env))
+	containers = append(
+		containers,
+		healthcheckContainer(cr, mysqlContainer.Env),
+		// FKS: Bootstrap container crashes, needs investigation
+		//bootstrapContainer(cr, mysqlContainer.Env),
+	)
 
 	return appendUniqueContainers(containers, cr.Spec.MySQL.Sidecars...)
 }
@@ -616,6 +621,10 @@ func bootstrapContainer(cr *apiv1alpha1.PerconaServerMySQL, env []corev1.EnvVar)
 			{
 				Name:      credsVolumeName,
 				MountPath: CredsMountPath,
+			},
+			{
+				Name:      DataVolumeName,
+				MountPath: DataMountPath,
 			},
 		},
 		Command: []string{"/opt/percona/bootstrap"},
