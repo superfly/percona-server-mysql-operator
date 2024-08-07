@@ -3,6 +3,9 @@ set -eo pipefail
 shopt -s nullglob
 set -o xtrace
 
+# FKS: Run bootstrap process in background instead of as a startup probe
+/opt/percona/bootstrap &
+
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
 	set -- mysqld "$@"

@@ -17,13 +17,13 @@ func commandHandler(arg string) http.HandlerFunc {
 			cmd = exec.Command("/opt/percona/bootstrap")
 		}
 
-		err := cmd.Run()
+		output, err := cmd.CombinedOutput()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "Command failed: %v\n", err)
+			fmt.Fprintf(w, "Command failed: %v\nOutput: %s\n", err, output)
 		} else {
 			w.WriteHeader(http.StatusOK)
-			fmt.Fprintln(w, "Command executed successfully")
+			fmt.Fprintf(w, "%s command executed successfully\n", arg)
 		}
 	}
 }
@@ -35,6 +35,6 @@ func main() {
 		http.HandleFunc("/"+arg, commandHandler(arg))
 	}
 
-	log.Println("Starting server on port 5500")
+	log.Println("Starting healthcheck server on port 5500")
 	log.Fatal(http.ListenAndServe(":5500", nil))
 }

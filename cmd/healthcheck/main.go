@@ -20,6 +20,7 @@ import (
 )
 
 func main() {
+
 	fullClusterCrash, err := fileExists("/var/lib/mysql/full-cluster-crash")
 	if err != nil {
 		log.Fatalf("check /var/lib/mysql/full-cluster-crash: %s", err)
@@ -66,13 +67,50 @@ func main() {
 		if err := checkReplication(ctx); err != nil {
 			log.Fatalf("replication check failed: %v", err)
 		}
+	case "debug":
+		if err := checkDebug(); err != nil {
+			log.Fatalf("debug failed: %v", err)
+		}
 	default:
 		log.Fatalf("Usage: %s liveness|readiness|replication", os.Args[0])
 	}
 }
 
+func checkDebug() error {
+	podHostname, err := os.Hostname()
+	if err != nil {
+		return errors.Wrap(err, "get pod hostname")
+	}
+
+	addrs, err := net.LookupHost(podHostname)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("lookup host %s", podHostname))
+	}
+	log.Println("Pod IPs:")
+	log.Println(addrs)
+
+	return err
+}
+
 func checkReadinessAsync(ctx context.Context) error {
-	podIP, err := getPodIP()
+
+	// Check if the bootstrap file exists
+	// If it does, the node is not ready
+	//
+	//
+	bootstrapFile := "/var/lib/mysql/startup_bootstrap.lock"
+
+	bootstrapDone, err := fileExists(bootstrapFile)
+
+	if err != nil {
+		return errors.Wrap(err, "check bootstrap file")
+	}
+
+	if !bootstrapDone {
+		return errors.New("bootstrap file not found")
+	}
+
+	podIP, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
@@ -141,7 +179,7 @@ func checkReadinessGR(ctx context.Context) error {
 }
 
 func checkLivenessAsync(ctx context.Context) error {
-	podIP, err := getPodIP()
+	podIP, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
@@ -192,7 +230,7 @@ func checkLivenessGR(ctx context.Context) error {
 }
 
 func checkReplication(ctx context.Context) error {
-	podIP, err := getPodIP()
+	podIP, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
@@ -238,6 +276,10 @@ func getPodHostname() (string, error) {
 	}
 
 	return hostname, nil
+}
+
+func getFlyPodIP() (string, error) {
+	return os.Getenv("FLY_PRIVATE_IP"), nil
 }
 
 func getPodIP() (string, error) {

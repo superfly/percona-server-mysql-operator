@@ -162,7 +162,9 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 		log.Println("Clone finished. Restarting container...")
 
 		// We return with 1 to restart container
-		os.Exit(1)
+		//os.Exit(1)
+		// FKS: Restart by killing a sidecar :D
+		restartContainer()
 	}
 
 	if !requireClone {

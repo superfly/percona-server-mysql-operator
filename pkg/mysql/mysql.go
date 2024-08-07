@@ -367,7 +367,7 @@ func UnreadyService(cr *apiv1alpha1.PerconaServerMySQL) *corev1.Service {
 			ClusterIP:                "None",
 			Ports:                    servicePorts(cr),
 			Selector:                 labels,
-			PublishNotReadyAddresses: false,
+			PublishNotReadyAddresses: true,
 		},
 	}
 }
@@ -412,7 +412,7 @@ func ProxyService(cr *apiv1alpha1.PerconaServerMySQL) *corev1.Service {
 			Ports:     servicePorts(cr),
 			Selector:  labels,
 			// Publish unready addresses since we don't have readiness checks
-			PublishNotReadyAddresses: true,
+			PublishNotReadyAddresses: false,
 		},
 	}
 }

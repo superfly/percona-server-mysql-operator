@@ -35,7 +35,7 @@ RUN dnf update && dnf install microdnf && percona-release enable tools release &
     percona-server-shared-${FULL_PERCONA_VERSION} \
     percona-server-client-${FULL_PERCONA_VERSION} \
     pmm2-client \
-    socat procps-ng qpress lz4 shadow-utils jq tar zstd && \
+    socat procps-ng qpress lz4 shadow-utils jq tar zstd bind-utils && \
     microdnf clean all && \
     rm -rf /var/cache/dnf /var/cache/yum
 
