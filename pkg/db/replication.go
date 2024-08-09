@@ -35,6 +35,13 @@ const (
 	MemberStateError   MemberState = "ERROR"
 )
 
+type MemberRole string
+
+const (
+	MemberSolePrimary MemberState = "PRIMARY"
+	MemberRoleReplica MemberState = "REPLICA"
+)
+
 type ReplicationDBManager struct {
 	db *db
 }
