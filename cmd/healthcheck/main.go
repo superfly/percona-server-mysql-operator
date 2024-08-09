@@ -72,7 +72,7 @@ func main() {
 			log.Fatalf("debug failed: %v", err)
 		}
 	default:
-		log.Fatalf("Usage: %s liveness|readiness|replication", os.Args[0])
+		log.Fatalf("Usage: %s liveness|readiness|replication|debug", os.Args[0])
 	}
 }
 
@@ -92,8 +92,7 @@ func checkDebug() error {
 	return err
 }
 
-func checkReadinessAsync(ctx context.Context) error {
-
+func checkBootstrap() error {
 	// Check if the bootstrap file exists
 	// If it does, the node is not ready
 	//
@@ -108,6 +107,15 @@ func checkReadinessAsync(ctx context.Context) error {
 
 	if !bootstrapDone {
 		return errors.New("bootstrap file not found")
+	}
+	return err
+}
+
+func checkReadinessAsync(ctx context.Context) error {
+
+	err := checkBootstrap()
+	if err != nil {
+		return errors.Wrap(err, "check bootstrap")
 	}
 
 	podIP, err := getFlyPodIP()
@@ -145,7 +153,14 @@ func checkReadinessAsync(ctx context.Context) error {
 }
 
 func checkReadinessGR(ctx context.Context) error {
-	podIP, err := getPodIP()
+
+	err := checkBootstrap()
+
+	if err != nil {
+		return errors.Wrap(err, "init bootstrap")
+	}
+
+	podIP, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
