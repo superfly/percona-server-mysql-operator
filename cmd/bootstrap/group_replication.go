@@ -354,7 +354,9 @@ func bootstrapGroupReplication(ctx context.Context) error {
 					}
 
 					// force restart container
-					os.Exit(1)
+					// os.Exit(1)
+					restartContainer()
+
 				} else {
 					return err
 				}
@@ -371,7 +373,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 			}
 
 			// force restart container
-			os.Exit(1)
+			restartContainer()
 		}
 	}
 
@@ -384,7 +386,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 
 	log.Printf("Cluster status:\n%s", status)
 
-	member, ok := status.DefaultReplicaSet.Topology[fmt.Sprintf("[%s]:%d", localShell.host, 3306)]
+	member, ok := status.DefaultReplicaSet.Topology[fmt.Sprintf("%s:%d", localShell.host, 3306)]
 	if !ok {
 		log.Printf("Adding instance (%s) to InnoDB cluster", localShell.host)
 
@@ -394,7 +396,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 
 		log.Printf("Added instance (%s) to InnoDB cluster", localShell.host)
 
-		os.Exit(1)
+		restartContainer()
 	}
 
 	rescanNeeded := false
@@ -421,7 +423,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 				}
 
 				// we deliberately fail the bootstrap after removing instance to add it back
-				os.Exit(1)
+				restartContainer()
 			}
 			return err
 		}
@@ -429,7 +431,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 		log.Printf("Instance (%s) rejoined to InnoDB cluster", localShell.host)
 	case innodbcluster.MemberStateUnreachable:
 		log.Printf("Instance (%s) is in InnoDB Cluster but its state is %s", localShell.host, member.MemberState)
-		os.Exit(1)
+		restartContainer()
 	default:
 		log.Printf("Instance (%s) state is %s", localShell.host, member.MemberState)
 	}

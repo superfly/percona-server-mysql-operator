@@ -54,12 +54,16 @@ func main() {
 		switch clusterType {
 		case "group-replication":
 			if err := bootstrapGroupReplication(context.Background()); err != nil {
-				log.Fatalf("bootstrap: bootstrap failed: %v", err)
+				log.Printf("bootstrap: bootstrap failed: %v", err)
+				restartContainer()
 			}
+			touchBootstrap()
+
 		case "async":
 			if err := bootstrapAsyncReplication(context.Background()); err != nil {
-				log.Fatalf("bootstrap failed: %v", err)
+				log.Printf("bootstrap failed: %v", err)
 			}
+			restartContainer()
 			touchBootstrap()
 		default:
 			log.Fatalf("bootstrap invalid cluster type: %v", clusterType)
