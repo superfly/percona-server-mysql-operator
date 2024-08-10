@@ -24,6 +24,7 @@ const (
 )
 
 type MemberState string
+type MemberRole string
 
 const (
 	MemberStateOnline      MemberState = "ONLINE"
@@ -32,11 +33,14 @@ const (
 	MemberStateUnreachable MemberState = "UNREACHABLE"
 	MemberStateError       MemberState = "ERROR"
 	MemberStateMissing     MemberState = "(MISSING)"
+	MemberRolePrimary      MemberRole  = "PRIMARY"
+	MemberRoleSecondary    MemberRole  = "SECONDARY"
 )
 
 type Member struct {
 	Address        string      `json:"address"`
 	MemberState    MemberState `json:"status"`
+	MemberRole     MemberRole  `json:"role"`
 	InstanceErrors []string    `json:"instanceErrors"`
 }
 

@@ -383,6 +383,9 @@ func (r *PerconaServerMySQLReconciler) doReconcile(
 	if err := r.reconcileReplication(ctx, cr); err != nil {
 		return errors.Wrap(err, "replication")
 	}
+	if err := r.reconcileGroupReplicationRoles(ctx, cr); err != nil {
+		return errors.Wrap(err, "group replication roles")
+	}
 	if err := r.reconcileHAProxy(ctx, cr); err != nil {
 		return errors.Wrap(err, "HAProxy")
 	}
@@ -860,6 +863,42 @@ func (r *PerconaServerMySQLReconciler) reconcileReplication(ctx context.Context,
 	}
 
 	return nil
+}
+
+func (r *PerconaServerMySQLReconciler) reconcileGroupReplicationRoles(ctx context.Context, cr *apiv1alpha1.PerconaServerMySQL) error {
+	log := logf.FromContext(ctx).WithName("reconcileGroupReplicationRoles")
+
+	if cr.Spec.MySQL.ClusterType != apiv1alpha1.ClusterTypeGR {
+		return nil
+	}
+
+	operatorPass, err := k8s.UserPassword(ctx, r.Client, cr, apiv1alpha1.UserOperator)
+	if err != nil {
+		return errors.Wrap(err, "get operator password")
+	}
+
+	pod, err := getReadyMySQLPod(ctx, r.Client, cr)
+	if err != nil {
+		return errors.Wrap(err, "get ready mysql pod")
+	}
+
+	um := database.NewReplicationManager(pod, r.ClientCmd, apiv1alpha1.UserOperator, operatorPass, mysql.PodFQDN(cr, pod))
+	members, err := um.GetGroupReplicationMembers(ctx)
+
+	for _, member := range members {
+		memberRole := string(member.MemberRole)
+		if pod.GetLabels()["role"] != memberRole {
+			k8s.AddLabel(pod, "role", memberRole)
+			podCopy := pod.DeepCopy()
+			k8s.AddLabel(pod, naming.LabelMySQLPrimary, "true")
+			log.V(1).Info(fmt.Sprintf("Labeling %s as GR member role %s", pod.Name, member.MemberRole))
+			if err := r.Client.Patch(ctx, podCopy, client.StrategicMergeFrom(pod)); err != nil {
+				return errors.Wrapf(err, "add GR member role %s to %v/%v", member.MemberRole, pod.GetNamespace(), pod.GetName())
+			}
+		}
+	}
+
+	return err
 }
 
 func (r *PerconaServerMySQLReconciler) reconcileGroupReplication(ctx context.Context, cr *apiv1alpha1.PerconaServerMySQL) error {

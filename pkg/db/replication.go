@@ -38,8 +38,8 @@ const (
 type MemberRole string
 
 const (
-	MemberSolePrimary MemberState = "PRIMARY"
-	MemberRoleReplica MemberState = "REPLICA"
+	MemberRolePrimary   MemberState = "PRIMARY"
+	MemberRoleSecondary MemberState = "SECONDARY"
 )
 
 type ReplicationDBManager struct {
@@ -180,9 +180,10 @@ func (m *ReplicationDBManager) GetGroupReplicationMembers(ctx context.Context) (
 	rows := []*struct {
 		Member string `csv:"member"`
 		State  string `csv:"state"`
+		Role   string `csv:"role"`
 	}{}
 
-	err := m.query(ctx, "SELECT MEMBER_HOST as member, MEMBER_STATE as state FROM replication_group_members", &rows)
+	err := m.query(ctx, "SELECT MEMBER_HOST as member, MEMBER_STATE as state, MEMBER_ROLE as role FROM replication_group_members", &rows)
 	if err != nil {
 		return nil, errors.Wrap(err, "query members")
 	}
@@ -190,7 +191,8 @@ func (m *ReplicationDBManager) GetGroupReplicationMembers(ctx context.Context) (
 	members := make([]innodbcluster.Member, 0)
 	for _, row := range rows {
 		state := innodbcluster.MemberState(row.State)
-		members = append(members, innodbcluster.Member{Address: row.Member, MemberState: state})
+		role := innodbcluster.MemberRole(row.Role)
+		members = append(members, innodbcluster.Member{Address: row.Member, MemberState: state, MemberRole: role})
 	}
 
 	return members, nil
