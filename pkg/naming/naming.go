@@ -1,8 +1,9 @@
 package naming
 
 const (
-	annotationPrefix      = "percona.com/"
-	annotationPrefixMysql = "mysql.percona.com/"
+	perconaPrefix      = "percona.com/"
+	mysqlPerconaPrefix = "mysql.percona.com/"
+	mysqlFlyPrefix     = "mysql.fly.io/"
 )
 
 const (
@@ -14,17 +15,25 @@ const (
 )
 
 const (
-	LabelMySQLPrimary = annotationPrefixMysql + "primary"
-	// FKS: annotationPrefixMysql fails with a 404 error even when slashes are URL encoded
-	LabelMySQLRole = "role"
-	LabelExposed   = annotationPrefix + "exposed"
+	LabelCluster = perconaPrefix + "cluster"
 )
 
 const (
-	FinalizerDeleteSSL         = annotationPrefix + "delete-ssl"
-	FinalizerDeletePodsInOrder = annotationPrefix + "delete-mysql-pods-in-order"
+	LabelMySQLPrimary = mysqlPerconaPrefix + "primary"
+	LabelExposed      = perconaPrefix + "exposed"
+	LabelMySQLRole    = mysqlFlyPrefix + "role"
+)
 
-	FinalizerDeleteBackup = annotationPrefix + "delete-backup"
+const (
+	LabelBackupType     = perconaPrefix + "backup-type"
+	LabelBackupAncestor = perconaPrefix + "backup-ancestor"
+)
+
+const (
+	FinalizerDeleteSSL         = perconaPrefix + "delete-ssl"
+	FinalizerDeletePodsInOrder = perconaPrefix + "delete-mysql-pods-in-order"
+
+	FinalizerDeleteBackup = perconaPrefix + "delete-backup"
 )
 
 type AnnotationKey string
@@ -34,9 +43,9 @@ func (s AnnotationKey) String() string {
 }
 
 const (
-	AnnotationSecretHash       AnnotationKey = annotationPrefix + "last-applied-secret"
-	AnnotationConfigHash       AnnotationKey = annotationPrefix + "configuration-hash"
-	AnnotationTLSHash          AnnotationKey = annotationPrefix + "last-applied-tls"
-	AnnotationPasswordsUpdated AnnotationKey = annotationPrefix + "passwords-updated"
-	AnnotationLastConfigHash   AnnotationKey = annotationPrefix + "last-config-hash"
+	AnnotationSecretHash       AnnotationKey = perconaPrefix + "last-applied-secret"
+	AnnotationConfigHash       AnnotationKey = perconaPrefix + "configuration-hash"
+	AnnotationTLSHash          AnnotationKey = perconaPrefix + "last-applied-tls"
+	AnnotationPasswordsUpdated AnnotationKey = perconaPrefix + "passwords-updated"
+	AnnotationLastConfigHash   AnnotationKey = perconaPrefix + "last-config-hash"
 )

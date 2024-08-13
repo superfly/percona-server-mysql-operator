@@ -42,6 +42,18 @@ func main() {
 		recovering = true
 	}
 
+	exists, err := lockExists("bootstrap")
+	if err != nil {
+		log.Fatalf("failed to check bootstrap.lock: %s", err)
+	}
+	if exists {
+		log.Printf("Waiting for bootstrap.lock to be deleted")
+		if err = waitLockRemoval("bootstrap"); err != nil {
+			log.Printf("failed to wait for bootstrap.lock: %s", err)
+			restartContainer()
+		}
+	}
+
 	if !recovering {
 
 		log.Printf("bootstrap sleeping for 15 seconds to allow the mysql server to start, SRV records to populate and other members to boot")
