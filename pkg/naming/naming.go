@@ -15,7 +15,9 @@ const (
 
 const (
 	LabelMySQLPrimary = annotationPrefixMysql + "primary"
-	LabelExposed      = annotationPrefix + "exposed"
+	// FKS: annotationPrefixMysql fails with a 404 error even when slashes are URL encoded
+	LabelMySQLRole = "role"
+	LabelExposed   = annotationPrefix + "exposed"
 )
 
 const (

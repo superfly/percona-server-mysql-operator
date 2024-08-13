@@ -886,14 +886,24 @@ func (r *PerconaServerMySQLReconciler) reconcileGroupReplicationRoles(ctx contex
 	members, err := um.GetGroupReplicationMembers(ctx)
 
 	for _, member := range members {
+		idx, err := getPodIndexFromHostname(member.Address)
+		if err != nil {
+			return errors.Wrap(err, "get pod index from hostname")
+		}
+
+		memberPod, err := getMySQLPod(ctx, r.Client, cr, idx)
+		if err != nil {
+			return errors.Wrap(err, "get mysql pod")
+		}
+
 		memberRole := string(member.MemberRole)
-		if pod.GetLabels()["role"] != memberRole {
-			k8s.AddLabel(pod, "role", memberRole)
-			podCopy := pod.DeepCopy()
-			k8s.AddLabel(pod, naming.LabelMySQLPrimary, "true")
-			log.V(1).Info(fmt.Sprintf("Labeling %s as GR member role %s", pod.Name, member.MemberRole))
-			if err := r.Client.Patch(ctx, podCopy, client.StrategicMergeFrom(pod)); err != nil {
-				return errors.Wrapf(err, "add GR member role %s to %v/%v", member.MemberRole, pod.GetNamespace(), pod.GetName())
+
+		if memberPod.GetLabels()[naming.LabelMySQLRole] != memberRole {
+			podCopy := memberPod.DeepCopy()
+			k8s.AddLabel(podCopy, naming.LabelMySQLRole, memberRole)
+			log.V(1).Info(fmt.Sprintf("Labeling %s as GR member role %s", podCopy.Name, member.MemberRole))
+			if err := r.Client.Patch(ctx, podCopy, client.StrategicMergeFrom(memberPod)); err != nil {
+				return errors.Wrapf(err, "add GR member role %s to %v/%v", member.MemberRole, podCopy.GetNamespace(), podCopy.GetName())
 			}
 		}
 	}
