@@ -35,6 +35,7 @@ import (
 
 	psv1alpha1 "github.com/percona/percona-server-mysql-operator/api/v1alpha1"
 	"github.com/percona/percona-server-mysql-operator/pkg/platform"
+	//+kubebuilder:scaffold:imports
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
@@ -103,7 +104,6 @@ func reconciler() *PerconaServerMySQLReconciler {
 		ServerVersion: &platform.ServerVersion{
 			Platform: platform.PlatformKubernetes,
 		},
-		Crons: NewCronRegistry(),
 	})
 }
 

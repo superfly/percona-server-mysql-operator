@@ -64,8 +64,6 @@ type PerconaServerMySQLReconciler struct {
 	ServerVersion *platform.ServerVersion
 	Recorder      record.EventRecorder
 	ClientCmd     clientcmd.Client
-
-	Crons cronRegistry
 }
 
 //+kubebuilder:rbac:groups=ps.percona.com,resources=perconaservermysqls;perconaservermysqls/status;perconaservermysqls/finalizers,verbs=get;list;watch;create;update;patch;delete
@@ -393,9 +391,6 @@ func (r *PerconaServerMySQLReconciler) doReconcile(
 	}
 	if err := r.reconcileMySQLRouter(ctx, cr); err != nil {
 		return errors.Wrap(err, "MySQL router")
-	}
-	if err := r.reconcileScheduledBackup(ctx, cr); err != nil {
-		return errors.Wrap(err, "scheduled backup")
 	}
 	if err := r.cleanupOutdated(ctx, cr); err != nil {
 		return errors.Wrap(err, "cleanup outdated")
@@ -811,18 +806,12 @@ func (r *PerconaServerMySQLReconciler) reconcileReplication(ctx context.Context,
 	}
 
 	if err := orchestrator.Discover(ctx, r.ClientCmd, pod, mysql.ServiceName(cr), mysql.DefaultPort); err != nil {
-		switch {
-		case errors.Is(err, orchestrator.ErrUnauthorized):
+		switch err.Error() {
+		case "Unauthorized":
 			log.Info("mysql is not ready, unauthorized orchestrator discover response. skip")
 			return nil
-		case errors.Is(err, orchestrator.ErrEmptyResponse):
+		case orchestrator.ErrEmptyResponse.Error():
 			log.Info("mysql is not ready, empty orchestrator discover response. skip")
-			return nil
-		case errors.Is(err, orchestrator.ErrBadConn):
-			log.Info("mysql is not ready, bad connection. skip")
-			return nil
-		case errors.Is(err, orchestrator.ErrNoSuchHost):
-			log.Info("mysql is not ready, host not found. skip")
 			return nil
 		}
 		return errors.Wrap(err, "failed to discover cluster")
@@ -1018,51 +1007,16 @@ func (r *PerconaServerMySQLReconciler) cleanupMysql(ctx context.Context, cr *api
 }
 
 func (r *PerconaServerMySQLReconciler) cleanupOrchestrator(ctx context.Context, cr *apiv1alpha1.PerconaServerMySQL) error {
-	orcExposer := orchestrator.Exposer(*cr)
-
 	if !cr.OrchestratorEnabled() {
 		if err := r.Delete(ctx, orchestrator.StatefulSet(cr, "", "")); err != nil && !k8serrors.IsNotFound(err) {
 			return errors.Wrap(err, "failed to delete orchestrator statefulset")
 		}
 
+		orcExposer := orchestrator.Exposer(*cr)
 		if err := r.cleanupOutdatedServices(ctx, &orcExposer, cr.Namespace); err != nil {
 			return errors.Wrap(err, "cleanup Orchestrator services")
 		}
-
-		return nil
 	}
-
-	if cr.Spec.Pause {
-		return nil
-	}
-
-	svcLabels := orcExposer.Labels()
-	svcLabels[naming.LabelExposed] = "true"
-	services, err := k8s.ServicesByLabels(ctx, r.Client, svcLabels, cr.Namespace)
-	if err != nil {
-		return errors.Wrap(err, "get exposed services")
-	}
-
-	if len(services) == int(orcExposer.Size()) {
-		return nil
-	}
-
-	outdatedSvcs := make(map[string]struct{}, len(services))
-	for i := len(services) - 1; i >= int(orcExposer.Size()); i-- {
-		outdatedSvcs[orchestrator.PodName(cr, i)] = struct{}{}
-	}
-
-	for _, svc := range services {
-		if _, ok := outdatedSvcs[svc.Name]; !ok {
-			continue
-		}
-
-		logf.FromContext(ctx).Info("Deleting outdated orchestrator service", "service", svc.Name)
-		if err := r.Client.Delete(ctx, &svc); err != nil && !k8serrors.IsNotFound(err) {
-			return errors.Wrapf(err, "delete Service/%s", svc.Name)
-		}
-	}
-
 	return nil
 }
 

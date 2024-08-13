@@ -79,8 +79,8 @@ func lookup(svcName string) (sets.Set[string], error) {
 	return endpoints, nil
 }
 
-func lockExists(lockName string) (bool, error) {
-	return fileExists(fmt.Sprintf("/var/lib/mysql/%s.lock", lockName))
+func lockExists() (bool, error) {
+	return fileExists("/var/lib/mysql/bootstrap.lock")
 }
 
 func fileExists(name string) (bool, error) {
@@ -94,9 +94,9 @@ func fileExists(name string) (bool, error) {
 	return true, nil
 }
 
-func waitLockRemoval(lockName string) error {
+func waitLockRemoval() error {
 	for {
-		exists, err := lockExists(lockName)
+		exists, err := lockExists()
 		if err != nil {
 			return err
 		}
