@@ -2,7 +2,7 @@
 
 set -e
 
-NAME=$1
+export NAME=$1
 
 if [ -z "$NAME" ]; then
   echo "Usage: deploy <cluster-name>"
@@ -21,4 +21,4 @@ kubectl apply -f ../deploy/crd.yaml
 kubectl apply -f ../deploy/rbac.yaml -n $NAME
 kubectl apply -n $NAME -f operator.yaml
 kubectl apply -f ../deploy/secrets.yaml -n $NAME
-yq eval '.metadata.name = "deploy1"' cluster.yaml | kubectl apply -n deploy1 -f -
+yq eval '.metadata.name = env(NAME)' cluster.yaml | kubectl apply -n $NAME -f -
