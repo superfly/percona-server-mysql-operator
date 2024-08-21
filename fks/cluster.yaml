@@ -30,6 +30,7 @@ spec:
     size: 2
     resources:
       requests:
+        cpu: 1
         memory: 1G
     affinity:
       antiAffinityTopologyKey: none
