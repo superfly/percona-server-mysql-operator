@@ -1,0 +1,74 @@
+apiVersion: ps.percona.com/v1alpha1
+kind: PerconaServerMySQL
+metadata:
+  name: gr-multinode
+  finalizers:
+    - percona.com/delete-mysql-pods-in-order
+spec:
+  ignoreLabels:
+    - role
+  # Only 3-node installs are considered 'safe', so allow unsafe settings with lower node counts
+  # Also allow running a cluster without a proxy
+  unsafeFlags:
+    proxy: true
+    proxySize: true
+    mysqlSize: true
+  crVersion: 0.8.0
+  secretsName: cluster1-secrets
+  # 'SmartUpdate' is only supported when using haproxy, so use 'RollingUpdate' for now
+  updateStrategy: RollingUpdate
+  upgradeOptions:
+    versionServiceEndpoint: https://check.percona.com
+    apply: disabled
+  mysql:
+    clusterType: group-replication
+    autoRecovery: true
+    image: flyio/percona-server-mysql-operator:ps-mysql
+    imagePullPolicy: Always
+    readinessProbe:
+      initialDelaySeconds: 60
+    size: 2
+    resources:
+      requests:
+        memory: 1G
+    affinity:
+      antiAffinityTopologyKey: none
+    volumeSpec:
+      persistentVolumeClaim:
+        resources:
+          requests:
+            storage: 2G
+  toolkit:
+    image: flyio/percona-server-mysql-operator:ps-mysql
+    imagePullPolicy: Always
+    # These resources must be set because all sidecars use the same resource settings, and toolkight might
+    # be the last sidecar, which is the one that sets the resources.
+    resources:
+      requests:
+        memory: 1G
+  backup:
+    enabled: true
+    image: flyio/percona-server-mysql-operator:ps-mysql
+    # These resources must be set because all sidecars use the same resource settings, and toolkight might
+    # be the last sidecar, which is the one that sets the resources.
+    resources:
+      requests:
+        memory: 1G
+    storages:
+      tigris:
+        type: s3
+        s3:
+          bucket: fly-mysql-backups
+          region: auto
+          credentialsSecret: fly-mysql-tigris-credentials
+          endpointUrl: https://fly.storage.tigris.dev
+  pmm:
+    enabled: true
+    image: flyio/percona-server-mysql-operator:ps-mysql
+    imagePullPolicy: Always
+    resources:
+      requests:
+        memory: 1G
+    serverHost: pmm.fly.dev
+    serverUser: admin
+
