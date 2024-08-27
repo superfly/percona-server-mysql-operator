@@ -19,6 +19,7 @@ package psbackup
 import (
 	"context"
 	"fmt"
+	"net"
 	"path"
 	"time"
 
@@ -154,7 +155,7 @@ func (r *PerconaServerMySQLBackupReconciler) Reconcile(ctx context.Context, req 
 	}
 
 	job := &batchv1.Job{}
-	nn = xtrabackup.JobNamespacedName(cr)
+	nn = xtrabackup.NamespacedName(cr)
 	err := r.Client.Get(ctx, nn, job)
 	if err != nil && !k8serrors.IsNotFound(err) {
 		return rr, errors.Wrapf(err, "get job %v", nn.String())
@@ -363,8 +364,32 @@ func getDestination(storage *apiv1alpha1.BackupStorageSpec, clusterName, creatio
 	return d, nil
 }
 
+func lookup(svcName string) (sets.String, error) {
+	endpoints := sets.NewString()
+	_, srvRecords, err := net.LookupSRV("", "", svcName)
+	if err != nil {
+		return endpoints, err
+	}
+	for _, srvRecord := range srvRecords {
+		// The SRV records ends in a "." for the root domain
+		ep := fmt.Sprintf("%v", srvRecord.Target[:len(srvRecord.Target)-1])
+		endpoints.Insert(ep)
+	}
+	return endpoints, nil
+}
+
 func (r *PerconaServerMySQLBackupReconciler) getBackupSource(ctx context.Context, cluster *apiv1alpha1.PerconaServerMySQL) (string, error) {
 	log := logf.FromContext(ctx).WithName("getBackupSource")
+
+	endpoints, err := lookup(cluster.Name + "-mysql." + cluster.Namespace)
+
+	if err != nil {
+		return "", err
+	}
+
+	if endpoints.Len() == 1 {
+		return endpoints.List()[0], nil
+	}
 
 	operatorPass, err := k8s.UserPassword(ctx, r.Client, cluster, apiv1alpha1.UserOperator)
 	if err != nil {

@@ -18,6 +18,7 @@ import (
 )
 
 func getFQDN(svcName string) (string, error) {
+
 	hostname, err := os.Hostname()
 	if err != nil {
 		return "", errors.Wrap(err, "get hostname")
@@ -41,12 +42,22 @@ func getSecret(username apiv1alpha1.SystemUser) (string, error) {
 	return strings.TrimSpace(string(sBytes)), nil
 }
 
+func getFlyPodIP() (string, error) {
+	return os.Getenv("FLY_PRIVATE_IP"), nil
+}
+
 func getPodIP(hostname string) (string, error) {
 	addrs, err := net.LookupHost(hostname)
 	if err != nil {
 		return "", errors.Wrapf(err, "lookup %s", hostname)
 	}
 	log.Println("lookup", hostname, addrs)
+
+	// If we get 2 IPs, we're resolving the current pod's hostname,
+	// and none of the IPs are correct, so use FLY_PRIVATE_IP
+	if len(addrs) == 2 {
+		return os.Getenv("FLY_PRIVATE_IP"), nil
+	}
 
 	return addrs[0], nil
 }
@@ -68,8 +79,8 @@ func lookup(svcName string) (sets.Set[string], error) {
 	return endpoints, nil
 }
 
-func lockExists(lockName string) (bool, error) {
-	return fileExists(fmt.Sprintf("/var/lib/mysql/%s.lock", lockName))
+func lockExists() (bool, error) {
+	return fileExists("/var/lib/mysql/bootstrap.lock")
 }
 
 func fileExists(name string) (bool, error) {
@@ -83,9 +94,9 @@ func fileExists(name string) (bool, error) {
 	return true, nil
 }
 
-func waitLockRemoval(lockName string) error {
+func waitLockRemoval() error {
 	for {
-		exists, err := lockExists(lockName)
+		exists, err := lockExists()
 		if err != nil {
 			return err
 		}

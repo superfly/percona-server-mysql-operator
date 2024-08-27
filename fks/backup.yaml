@@ -1,0 +1,10 @@
+apiVersion: ps.percona.com/v1alpha1
+kind: PerconaServerMySQLBackup
+metadata:
+  name: gr2backup3
+  finalizers:
+    - percona.com/delete-backup
+spec:
+  clusterName: js-wonkywonk-1
+  storageName: tigris
+

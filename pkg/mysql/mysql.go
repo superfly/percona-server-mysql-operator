@@ -407,10 +407,11 @@ func ProxyService(cr *apiv1alpha1.PerconaServerMySQL) *corev1.Service {
 			Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
-			Type:                     corev1.ServiceTypeClusterIP,
-			ClusterIP:                "None",
-			Ports:                    servicePorts(cr),
-			Selector:                 labels,
+			Type:      corev1.ServiceTypeClusterIP,
+			ClusterIP: "None",
+			Ports:     servicePorts(cr),
+			Selector:  labels,
+			// Publish unready addresses since we don't have readiness checks
 			PublishNotReadyAddresses: false,
 		},
 	}
@@ -460,7 +461,8 @@ func PodService(cr *apiv1alpha1.PerconaServerMySQL, t corev1.ServiceType, podNam
 }
 
 func containers(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret) []corev1.Container {
-	containers := []corev1.Container{mysqldContainer(cr)}
+	mysqlContainer := mysqldContainer(cr)
+	containers := []corev1.Container{mysqlContainer}
 
 	if backup := cr.Spec.Backup; backup != nil && backup.Enabled {
 		containers = append(containers, backupContainer(cr))
@@ -473,6 +475,15 @@ func containers(cr *apiv1alpha1.PerconaServerMySQL, secret *corev1.Secret) []cor
 	if cr.PMMEnabled(secret) {
 		containers = append(containers, pmm.Container(cr, secret, ComponentName))
 	}
+
+	// FKS: Run healthcheck sidecar HTTP server for readiness and liveness probes,
+	//      and a bootstrap sidecar for cluster bootstrap instead of running as a startup probe (unsupported by FKS)
+	containers = append(
+		containers,
+		healthcheckContainer(cr, mysqlContainer.Env),
+		// FKS: Bootstrap container crashes, needs investigation
+		//bootstrapContainer(cr, mysqlContainer.Env),
+	)
 
 	return appendUniqueContainers(containers, cr.Spec.MySQL.Sidecars...)
 }
@@ -541,15 +552,24 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 				Name:      configVolumeName,
 				MountPath: configMountPath,
 			},
+			// FKS: Add backup-logs volume mount from the backup sidecar
+			{
+				Name:      "backup-logs",
+				MountPath: BackupLogDir,
+			},
 		},
 		Command:                  []string{"/opt/percona/ps-entrypoint.sh"},
 		Args:                     []string{"mysqld"},
 		TerminationMessagePath:   "/dev/termination-log",
 		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 		SecurityContext:          spec.ContainerSecurityContext,
-		LivenessProbe:            k8s.ExecProbe(spec.LivenessProbe, []string{"/opt/percona/healthcheck", "liveness"}),
-		ReadinessProbe:           k8s.ExecProbe(spec.ReadinessProbe, []string{"/opt/percona/healthcheck", "readiness"}),
-		StartupProbe:             k8s.ExecProbe(spec.StartupProbe, []string{"/opt/percona/bootstrap"}),
+
+		// FKS: Liveness startup probes not supported yet. Readiness is supported via HTTP only.
+		// The bootstrap container will be used for cluster bootstrap instead of a startup probe.
+		// HTTP-based liveness will be implemented soon in FKS.
+		ReadinessProbe: k8s.HTTPCheckProbe(spec.ReadinessProbe, "/readiness", 5500),
+
+		// FKS: Lifecycle not supported yet. Ignored.
 		Lifecycle: &corev1.Lifecycle{
 			PreStop: &corev1.LifecycleHandler{
 				Exec: &corev1.ExecAction{
@@ -562,11 +582,61 @@ func mysqldContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 	return container
 }
 
+// FKS: Add healthcheck sidecar container to replace exec probes for readiness, liveness and startup probes
+func healthcheckContainer(cr *apiv1alpha1.PerconaServerMySQL, env []corev1.EnvVar) corev1.Container {
+	return corev1.Container{
+		Name:            "healthcheck",
+		Image:           cr.Spec.MySQL.Image,
+		ImagePullPolicy: cr.Spec.MySQL.ImagePullPolicy,
+		Resources:       cr.Spec.MySQL.Resources,
+		Env:             env,
+		Ports: []corev1.ContainerPort{
+			{
+				Name:          "http",
+				ContainerPort: 5500,
+			},
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      credsVolumeName,
+				MountPath: CredsMountPath,
+			},
+		},
+		Command:                  []string{"/opt/percona/healthcheck_http"},
+		TerminationMessagePath:   "/dev/termination-log",
+		TerminationMessagePolicy: corev1.TerminationMessageReadFile,
+		SecurityContext:          cr.Spec.MySQL.ContainerSecurityContext,
+	}
+}
+
+// FKS: Add healthcheck sidecar container to replace exec probes for readiness, liveness and startup probes
+func bootstrapContainer(cr *apiv1alpha1.PerconaServerMySQL, env []corev1.EnvVar) corev1.Container {
+	return corev1.Container{
+		Name:            "bootstrap",
+		Image:           cr.Spec.MySQL.Image,
+		ImagePullPolicy: cr.Spec.MySQL.ImagePullPolicy,
+		Resources:       cr.Spec.MySQL.Resources,
+		Env:             env,
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      credsVolumeName,
+				MountPath: CredsMountPath,
+			},
+			{
+				Name:      DataVolumeName,
+				MountPath: DataMountPath,
+			},
+		},
+		Command: []string{"/opt/percona/bootstrap"},
+	}
+}
+
 func backupContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 	return corev1.Container{
 		Name:            "xtrabackup",
 		Image:           cr.Spec.Backup.Image,
 		ImagePullPolicy: cr.Spec.Backup.ImagePullPolicy,
+		Resources:       cr.Spec.Backup.Resources,
 		Env:             []corev1.EnvVar{},
 		Ports: []corev1.ContainerPort{
 			{

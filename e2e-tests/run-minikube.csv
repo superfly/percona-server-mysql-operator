@@ -9,7 +9,6 @@ gr-init-deploy
 gr-one-pod
 gr-recreate
 gr-scaling
-gr-scheduled-backup
 gr-self-healing
 gr-tls-cert-manager
 gr-users
@@ -18,7 +17,6 @@ init-deploy
 one-pod
 operator-self-healing
 recreate
-scheduled-backup
 sidecars
 smart-update
 tls-cert-manager

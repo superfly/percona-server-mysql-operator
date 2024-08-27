@@ -362,7 +362,8 @@ func mysqlMonitContainer(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 		Args: []string{
 			"/opt/percona/peer-list",
 			"-on-change=/opt/percona/haproxy_add_mysql_nodes.sh",
-			"-service=$(MYSQL_SERVICE)",
+			// FKS: Env var substitution in args seems broken, so passing the value directly here
+			"-service=" + mysql.ProxyServiceName(cr),
 		},
 		Env:     env,
 		EnvFrom: spec.EnvFrom,

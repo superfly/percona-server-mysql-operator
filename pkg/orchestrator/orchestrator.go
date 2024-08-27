@@ -92,7 +92,7 @@ func FQDN(cr *apiv1alpha1.PerconaServerMySQL, idx int) string {
 }
 
 func APIHost(cr *apiv1alpha1.PerconaServerMySQL) string {
-	return fmt.Sprintf("http://%s:%d", FQDN(cr, 0), defaultWebPort)
+	return fmt.Sprintf("http://[%s]:%d", FQDN(cr, 0), defaultWebPort)
 }
 
 // Labels returns labels of orchestrator
@@ -234,8 +234,15 @@ func container(cr *apiv1alpha1.PerconaServerMySQL) corev1.Container {
 			Value: mysql.ServiceName(cr),
 		},
 		{
-			Name:  "RAFT_ENABLED",
-			Value: "true",
+			Name: "ORC_TOPOLOGY_PASSWORD",
+			ValueFrom: &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					Key: "orchestrator",
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: cr.InternalSecretName(),
+					},
+				},
+			},
 		},
 		{
 			Name:  "CLUSTER_NAME",
@@ -315,12 +322,12 @@ func sidecarContainers(cr *apiv1alpha1.PerconaServerMySQL) []corev1.Container {
 				},
 			},
 			VolumeMounts: containerMounts(),
-			Command:      []string{"/opt/percona/orc-entrypoint.sh"},
+			// FKS run peer-list directly, since running it via the entrypoint script caused conflicts with the main container
+			Command: []string{"/opt/percona/peer-list"},
 			Args: []string{
-				"/opt/percona/peer-list",
 				"-on-change=/usr/bin/add_mysql_nodes.sh",
-				"-service=$(MYSQL_SERVICE)",
-			},
+				// FKS: Env var substitution in args isn't supported, so we pass the service name directly
+				"-service=" + serviceName},
 			TerminationMessagePath:   "/dev/termination-log",
 			TerminationMessagePolicy: corev1.TerminationMessageReadFile,
 			SecurityContext:          cr.Spec.Orchestrator.ContainerSecurityContext,
@@ -450,7 +457,7 @@ func RaftNodes(cr *apiv1alpha1.PerconaServerMySQL) []string {
 	nodes := make([]string, cr.Spec.Orchestrator.Size)
 
 	for i := 0; i < int(cr.Spec.Orchestrator.Size); i++ {
-		nodes[i] = fmt.Sprintf("%s:%d", FQDN(cr, i), 10008)
+		nodes[i] = fmt.Sprintf("[%s]:%d", FQDN(cr, i), 10008)
 	}
 
 	return nodes

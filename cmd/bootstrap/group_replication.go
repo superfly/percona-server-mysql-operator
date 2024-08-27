@@ -172,7 +172,7 @@ func updateGroupPeers(ctx context.Context, peers sets.Set[string]) error {
 			tmpSeeds = strings.Split(seeds, ",")
 		}
 		seedSet := sets.New(tmpSeeds...)
-		seedSet.Insert(fmt.Sprintf("%s:%d", fqdn, 33061))
+		seedSet.Insert(fmt.Sprintf("[%s]:%d", fqdn, 3306))
 
 		seeds = strings.Join(sets.List(seedSet), ",")
 
@@ -309,6 +309,17 @@ func bootstrapGroupReplication(ctx context.Context) error {
 		log.Printf("bootstrap finished in %f seconds", timer.ElapsedSeconds("total"))
 	}()
 
+	exists, err := lockExists()
+	if err != nil {
+		return errors.Wrap(err, "lock file check")
+	}
+	if exists {
+		log.Printf("Waiting for bootstrap.lock to be deleted")
+		if err = waitLockRemoval(); err != nil {
+			return errors.Wrap(err, "wait lock removal")
+		}
+	}
+
 	log.Println("Bootstrap starting...")
 
 	localShell, err := connectToLocal(ctx)
@@ -343,7 +354,9 @@ func bootstrapGroupReplication(ctx context.Context) error {
 					}
 
 					// force restart container
-					os.Exit(1)
+					// os.Exit(1)
+					restartContainer()
+
 				} else {
 					return err
 				}
@@ -360,7 +373,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 			}
 
 			// force restart container
-			os.Exit(1)
+			restartContainer()
 		}
 	}
 
@@ -382,6 +395,8 @@ func bootstrapGroupReplication(ctx context.Context) error {
 		}
 
 		log.Printf("Added instance (%s) to InnoDB cluster", localShell.host)
+
+		restartContainer()
 	}
 
 	rescanNeeded := false
@@ -408,7 +423,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 				}
 
 				// we deliberately fail the bootstrap after removing instance to add it back
-				os.Exit(1)
+				restartContainer()
 			}
 			return err
 		}
@@ -416,7 +431,7 @@ func bootstrapGroupReplication(ctx context.Context) error {
 		log.Printf("Instance (%s) rejoined to InnoDB cluster", localShell.host)
 	case innodbcluster.MemberStateUnreachable:
 		log.Printf("Instance (%s) is in InnoDB Cluster but its state is %s", localShell.host, member.MemberState)
-		os.Exit(1)
+		restartContainer()
 	default:
 		log.Printf("Instance (%s) state is %s", localShell.host, member.MemberState)
 	}

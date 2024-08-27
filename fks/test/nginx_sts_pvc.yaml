@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nginx-sts-pvc
+  labels:
+    app: nginx-sts-pvc
+spec:
+  serviceName: "nginx-sts-pvc"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-sts-pvc
+  template:
+    metadata:
+      labels:
+        app: nginx-sts-pvc
+    spec:
+      containers:
+      - name: nginx-sts-pvc
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+          name: web
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        volumeMounts:
+        - name: nginx-sts-pvc
+          mountPath: /mnt
+  volumeClaimTemplates:
+  - metadata:
+      name: nginx-sts-pvc
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 2Gi
+

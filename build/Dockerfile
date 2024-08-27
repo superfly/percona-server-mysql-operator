@@ -30,6 +30,13 @@ RUN GOOS=$GOOS GOARCH=$TARGETARCH CGO_ENABLED=$CGO_ENABLED GO_LDFLAGS=$GO_LDFLAG
     -o build/_output/bin/healthcheck \
     cmd/healthcheck/main.go \
     && cp -r build/_output/bin/healthcheck /usr/local/bin/healthcheck
+
+RUN GOOS=$GOOS GOARCH=$TARGETARCH CGO_ENABLED=$CGO_ENABLED GO_LDFLAGS=$GO_LDFLAGS \
+    go build -ldflags "-w -s -X main.GitCommit=$GIT_COMMIT -X main.GitBranch=$GIT_BRANCH -X main.BuildTime=$BUILD_TIME" \
+    -o build/_output/bin/healthcheck_http \
+    cmd/healthcheck_http/main.go \
+    && cp -r build/_output/bin/healthcheck_http /usr/local/bin/healthcheck_http
+
 RUN GOOS=$GOOS GOARCH=$TARGETARCH CGO_ENABLED=$CGO_ENABLED GO_LDFLAGS=$GO_LDFLAGS \
     go build -ldflags "-w -s -X main.GitCommit=$GIT_COMMIT -X main.GitBranch=$GIT_BRANCH -X main.BuildTime=$BUILD_TIME" \
     -o build/_output/bin/sidecar \
@@ -61,6 +68,7 @@ COPY LICENSE /licenses/
 COPY --from=go_builder /usr/local/bin/percona-server-mysql-operator /usr/local/bin/percona-server-mysql-operator
 COPY --from=go_builder /usr/local/bin/bootstrap /opt/percona-server-mysql-operator/bootstrap
 COPY --from=go_builder /usr/local/bin/healthcheck /opt/percona-server-mysql-operator/healthcheck
+COPY --from=go_builder /usr/local/bin/healthcheck_http /opt/percona-server-mysql-operator/healthcheck_http
 COPY --from=go_builder /usr/local/bin/sidecar /opt/percona-server-mysql-operator/sidecar
 COPY --from=go_builder /usr/local/bin/peer-list /opt/percona-server-mysql-operator/peer-list
 COPY --from=go_builder /usr/local/bin/orc-handler /opt/percona-server-mysql-operator/orc-handler
@@ -85,4 +93,4 @@ COPY build/haproxy.cfg /opt/percona-server-mysql-operator/haproxy.cfg
 COPY build/haproxy-global.cfg /opt/percona-server-mysql-operator/haproxy-global.cfg
 COPY build/pmm-prerun.sh /opt/percona-server-mysql-operator/pmm-prerun.sh
 
-USER 2
+# USER 2

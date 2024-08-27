@@ -3,6 +3,9 @@ set -eo pipefail
 shopt -s nullglob
 set -o xtrace
 
+# FKS: Run bootstrap process in background instead of as a startup probe
+/opt/percona/bootstrap &
+
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
 	set -- mysqld "$@"
@@ -139,7 +142,8 @@ TLS_DIR=/etc/mysql/mysql-tls-secret
 CUSTOM_CONFIG_FILES=("/etc/mysql/config/auto-config.cnf" "/etc/mysql/config/my-config.cnf" "/etc/mysql/config/my-secret.cnf")
 
 create_default_cnf() {
-	POD_IP=$(hostname -I | awk '{print $1}')
+  # FKS - host has two IPv4 and IPv6, and only the last one is reachable and has services bound to it
+	POD_IP=$(hostname -I | awk '{print $4}')
 
 	if [[ ${HOSTNAME} =~ "-xb-" ]]; then
 		FQDN=${HOSTNAME}
@@ -179,7 +183,7 @@ create_default_cnf() {
 }
 
 load_group_replication_plugin() {
-	POD_IP=$(hostname -I | awk '{print $1}')
+	POD_IP=$(hostname -I | awk '{print $4}')
 
 	sed -i "/\[mysqld\]/a plugin_load_add=group_replication.so" $CFG
 	sed -i "/\[mysqld\]/a group_replication_exit_state_action=ABORT_SERVER" $CFG
@@ -226,7 +230,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		echo 'Initializing database'
 		# we initialize database into $TMPDIR because "--initialize-insecure" option does not work if directory is not empty
 		# in some cases storage driver creates unremovable artifacts (see K8SPXC-286), so $DATADIR cleanup is not possible
-		"$@" --initialize-insecure --datadir="$TMPDIR"
+		"$@" --initialize-insecure --skip-ssl --datadir="$TMPDIR"
 		mv "$TMPDIR"/* "$DATADIR/"
 		rm -rfv "$TMPDIR"
 		echo 'Database initialized'
@@ -427,14 +431,14 @@ fi
 
 recovery_file='/var/lib/mysql/sleep-forever'
 if [ -f "${recovery_file}" ]; then
-	set +o xtrace
-	echo "The $recovery_file file is detected, node is going to infinity loop"
-	echo "If you want to exit from infinity loop you need to remove $recovery_file file"
-	for (( ; ; )); do
-		if [ ! -f "${recovery_file}" ]; then
-			exit 0
-		fi
-	done
+  set +o xtrace
+  echo "The $recovery_file file is detected, node is going to infinity loop"
+  echo "If you want to exit from infinity loop you need to remove $recovery_file file"
+  for (( ; ; )); do
+    if [ ! -f "${recovery_file}" ]; then
+      exit 0
+    fi
+  done
 fi
 
 exec "$@"

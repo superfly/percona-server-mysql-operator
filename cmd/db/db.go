@@ -28,7 +28,7 @@ func NewDatabase(ctx context.Context, user apiv1alpha1.SystemUser, pass, host st
 	config.User = string(user)
 	config.Passwd = pass
 	config.Net = "tcp"
-	config.Addr = fmt.Sprintf("%s:%d", host, port)
+	config.Addr = fmt.Sprintf("[%s]:%d", host, port)
 	config.DBName = "performance_schema"
 	config.Params = map[string]string{
 		"interpolateParams": "true",
@@ -159,12 +159,13 @@ func (d *DB) CloneInProgress(ctx context.Context) (bool, error) {
 }
 
 func (d *DB) Clone(ctx context.Context, donor, user, pass string, port int32) error {
-	_, err := d.db.ExecContext(ctx, "SET GLOBAL clone_valid_donor_list=?", fmt.Sprintf("%s:%d", donor, port))
-	if err != nil {
-		return errors.Wrap(err, "set clone_valid_donor_list")
-	}
+	// FKS: clone_valid_donor_list does not support IPv6, so we don't set this optional security setting
+	// _, err := d.db.ExecContext(ctx, "SET GLOBAL clone_valid_donor_list=?", fmt.Sprintf("[%s]:%d", donor, port))
+	// if err != nil {
+	// 	return errors.Wrap(err, "set clone_valid_donor_list")
+	// }
 
-	_, err = d.db.ExecContext(ctx, "CLONE INSTANCE FROM ?@?:? IDENTIFIED BY ?", user, donor, port, pass)
+	_, err := d.db.ExecContext(ctx, "CLONE INSTANCE FROM ?@?:? IDENTIFIED BY ?", user, donor, port, pass)
 
 	mErr, ok := err.(*mysql.MySQLError)
 	if !ok {

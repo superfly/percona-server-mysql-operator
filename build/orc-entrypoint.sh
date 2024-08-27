@@ -20,7 +20,7 @@ jq -M ". + {
         HTTPAdvertise:\"http://$HOSTNAME.$NAMESPACE:3000\",
         RaftAdvertise:\"$HOSTNAME.$NAMESPACE\",
         RaftBind:\"$HOSTNAME.$ORC_SERVICE.$NAMESPACE\",
-        RaftEnabled: ${RAFT_ENABLED:-"true"},
+        RaftEnabled: false,
         MySQLTopologyUseMutualTLS: true,
         MySQLTopologySSLSkipVerify: true,
         MySQLTopologySSLPrivateKeyFile:\"${ORC_CONF_PATH}/ssl/tls.key\",

@@ -20,6 +20,7 @@ import (
 )
 
 func main() {
+
 	fullClusterCrash, err := fileExists("/var/lib/mysql/full-cluster-crash")
 	if err != nil {
 		log.Fatalf("check /var/lib/mysql/full-cluster-crash: %s", err)
@@ -66,13 +67,58 @@ func main() {
 		if err := checkReplication(ctx); err != nil {
 			log.Fatalf("replication check failed: %v", err)
 		}
+	case "debug":
+		if err := checkDebug(); err != nil {
+			log.Fatalf("debug failed: %v", err)
+		}
 	default:
-		log.Fatalf("Usage: %s liveness|readiness|replication", os.Args[0])
+		log.Fatalf("Usage: %s liveness|readiness|replication|debug", os.Args[0])
 	}
 }
 
+func checkDebug() error {
+	podHostname, err := os.Hostname()
+	if err != nil {
+		return errors.Wrap(err, "get pod hostname")
+	}
+
+	addrs, err := net.LookupHost(podHostname)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("lookup host %s", podHostname))
+	}
+	log.Println("Pod IPs:")
+	log.Println(addrs)
+
+	return err
+}
+
+func checkBootstrap() error {
+	// Check if the bootstrap file exists
+	// If it does, the node is not ready
+	//
+	//
+	bootstrapFile := "/var/lib/mysql/startup_bootstrap.lock"
+
+	bootstrapDone, err := fileExists(bootstrapFile)
+
+	if err != nil {
+		return errors.Wrap(err, "check bootstrap file")
+	}
+
+	if !bootstrapDone {
+		return errors.New("bootstrap file not found")
+	}
+	return err
+}
+
 func checkReadinessAsync(ctx context.Context) error {
-	podIP, err := getPodIP()
+
+	err := checkBootstrap()
+	if err != nil {
+		return errors.Wrap(err, "check bootstrap")
+	}
+
+	podIP, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
@@ -107,7 +153,14 @@ func checkReadinessAsync(ctx context.Context) error {
 }
 
 func checkReadinessGR(ctx context.Context) error {
-	podIP, err := getPodIP()
+
+	err := checkBootstrap()
+
+	if err != nil {
+		return errors.Wrap(err, "init bootstrap")
+	}
+
+	podIP, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
@@ -141,7 +194,7 @@ func checkReadinessGR(ctx context.Context) error {
 }
 
 func checkLivenessAsync(ctx context.Context) error {
-	podIP, err := getPodIP()
+	podIP, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
@@ -192,7 +245,7 @@ func checkLivenessGR(ctx context.Context) error {
 }
 
 func checkReplication(ctx context.Context) error {
-	podIP, err := getPodIP()
+	podIP, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
@@ -240,6 +293,10 @@ func getPodHostname() (string, error) {
 	return hostname, nil
 }
 
+func getFlyPodIP() (string, error) {
+	return os.Getenv("FLY_PRIVATE_IP"), nil
+}
+
 func getPodIP() (string, error) {
 	hostname, err := getPodHostname()
 	if err != nil {
@@ -249,6 +306,12 @@ func getPodIP() (string, error) {
 	addrs, err := net.LookupHost(hostname)
 	if err != nil {
 		return "", errors.Wrapf(err, "lookup %s", hostname)
+	}
+
+	// If we get 2 IPs, we're resolving the current pod's hostname,
+	// and none of the IPs are correct, so use FLY_PRIVATE_IP
+	if len(addrs) == 2 {
+		return os.Getenv("FLY_PRIVATE_IP"), nil
 	}
 
 	return addrs[0], nil

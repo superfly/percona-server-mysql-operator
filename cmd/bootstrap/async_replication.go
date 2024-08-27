@@ -32,10 +32,27 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 	svc := os.Getenv("SERVICE_NAME_UNREADY")
 	mysqlSvc := os.Getenv("SERVICE_NAME")
 	peers, err := lookup(svc)
+
 	if err != nil {
 		return errors.Wrap(err, "lookup")
 	}
 	log.Printf("Peers: %v", sets.List(peers))
+
+	exists, err := lockExists()
+	if err != nil {
+		return errors.Wrap(err, "lock file check")
+	}
+	if exists {
+		log.Printf("Waiting for bootstrap.lock to be deleted")
+		if err = waitLockRemoval(); err != nil {
+			return errors.Wrap(err, "wait lock removal")
+		}
+	}
+	primary, replicas, err := getTopology(ctx, peers)
+	if err != nil {
+		return errors.Wrap(err, "select donor")
+	}
+	log.Printf("Primary: %s Replicas: %v", primary, replicas)
 
 	fqdn, err := getFQDN(mysqlSvc)
 	if err != nil {
@@ -43,18 +60,12 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 	}
 	log.Printf("FQDN: %s", fqdn)
 
-	primary, replicas, err := getTopology(ctx, fqdn, peers)
-	if err != nil {
-		return errors.Wrap(err, "select donor")
-	}
-	log.Printf("Primary: %s Replicas: %v", primary, replicas)
-
-	podHostname, err := os.Hostname()
-	if err != nil {
-		return errors.Wrap(err, "get hostname")
-	}
-
-	podIp, err := getPodIP(podHostname)
+	// podHostname, err := os.Hostname()
+	// if err != nil {
+	// 	return errors.Wrap(err, "get hostname")
+	// }
+	// FKS: resolving the hostname on localhost returns none of the correct IPs, so we use FLY_PRIVATE_IP
+	podIp, err := getFlyPodIP()
 	if err != nil {
 		return errors.Wrap(err, "get pod IP")
 	}
@@ -151,7 +162,9 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 		log.Println("Clone finished. Restarting container...")
 
 		// We return with 1 to restart container
-		os.Exit(1)
+		//os.Exit(1)
+		// FKS: Restart by killing a sidecar :D
+		restartContainer()
 	}
 
 	if !requireClone {
@@ -189,7 +202,7 @@ func bootstrapAsyncReplication(ctx context.Context) error {
 	return nil
 }
 
-func getTopology(ctx context.Context, fqdn string, peers sets.Set[string]) (string, []string, error) {
+func getTopology(ctx context.Context, peers sets.Set[string]) (string, []string, error) {
 	replicas := sets.New[string]()
 	primary := ""
 
@@ -227,15 +240,7 @@ func getTopology(ctx context.Context, fqdn string, peers sets.Set[string]) (stri
 	if primary == "" && peers.Len() == 1 {
 		primary = sets.List(peers)[0]
 	} else if primary == "" {
-		for _, r := range sets.List(replicas) {
-			// We should set primary to the first replica, which is not the bootstrapped pod.
-			// The bootstrapped pod can't be a primary.
-			// Even if it was a primary before, orchestrator will promote another replica "as result of DeadMaster".
-			if r != fqdn {
-				primary = r
-				break
-			}
-		}
+		primary = sets.List(replicas)[0]
 	}
 
 	if replicas.Len() > 0 {
